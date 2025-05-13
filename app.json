@@ -16,14 +16,19 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.zhenya228.OnTime",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "useNextNotificationsApi": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -32,6 +37,23 @@
       "eas": {
         "projectId": "544ac719-f65f-4de8-b154-c663b71413ec"
       }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#24A19C",
+          "mode": "production"
+        }
+      ]
+    ],
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#24A19C",
+      "androidMode": "default",
+      "androidCollapsedTitle": "OnTime",
+      "iosDisplayInForeground": true
     }
   }
 }
