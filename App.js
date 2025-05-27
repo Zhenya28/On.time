@@ -11,9 +11,6 @@ import { NotificationProvider } from './src/context/NotificationContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import theme from './src/styles/theme';
 
-// Головний компонент додатку
-// Налаштовує всі необхідні провайдери та структуру додатку
-// Забезпечує доступ до стану та функцій через систему контекстів
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

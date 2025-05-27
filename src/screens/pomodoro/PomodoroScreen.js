@@ -5,54 +5,47 @@ import { usePomodoro } from '../../context/PomodoroContext';
 import theme from '../../styles/theme';
 import Svg, { Circle } from 'react-native-svg';
 
-// Кольори для різних типів сесій Pomodoro
-// Допомагають візуально розрізняти режими таймера
+// Session type colors
 const SESSION_COLORS = {
-  work: '#FF486A',      // Червоний для робочої сесії
-  shortBreak: '#24A19C', // Бірюзовий для короткої перерви
-  longBreak: '#218EFD',  // Синій для довгої перерви
+  work: '#FF486A',      // Red for work
+  shortBreak: '#24A19C', // Teal for short break
+  longBreak: '#218EFD',  // Blue for long break
 };
 
-// Компонент PomodoroScreen
-// Відображає таймер Pomodoro з можливістю налаштування тривалості сесій
-// Дозволяє відстежувати робочі сесії та перерви за методикою Pomodoro
+// Ekran Pomodoro
 const PomodoroScreen = () => {
-  // Отримуємо всі необхідні функції та стани з контексту Pomodoro
   const { 
-    settings,           // Налаштування таймера
-    updateSettings,     // Функція оновлення налаштувань
-    isRunning,          // Стан роботи таймера (запущений/зупинений)
-    currentSession,     // Поточний тип сесії (робота/коротка перерва/довга перерва)
-    timeLeft,           // Залишок часу в секундах
-    sessionsCompleted,  // Кількість завершених робочих сесій
-    startTimer,         // Функція запуску таймера
-    pauseTimer,         // Функція паузи таймера
-    resetTimer,         // Функція скидання таймера
-    skipSession,        // Функція пропуску поточної сесії
-    SESSION_TYPES       // Константи типів сесій
+    settings, 
+    updateSettings, 
+    isRunning, 
+    currentSession, 
+    timeLeft, 
+    sessionsCompleted, 
+    startTimer, 
+    pauseTimer, 
+    resetTimer, 
+    skipSession, 
+    SESSION_TYPES 
   } = usePomodoro();
 
-  // Локальні стани для керування інтерфейсом
-  const [settingsVisible, setSettingsVisible] = useState(false);  // Видимість діалогу налаштувань
-  const [workDuration, setWorkDuration] = useState(settings.workDuration.toString());  // Тривалість робочої сесії
-  const [shortBreakDuration, setShortBreakDuration] = useState(settings.shortBreakDuration.toString());  // Тривалість короткої перерви
-  const [longBreakDuration, setLongBreakDuration] = useState(settings.longBreakDuration.toString());  // Тривалість довгої перерви
-  const [snackbarVisible, setSnackbarVisible] = useState(false);  // Видимість snackbar повідомлення
-  const [snackbarMessage, setSnackbarMessage] = useState('');  // Текст snackbar повідомлення
+  const [settingsVisible, setSettingsVisible] = useState(false);
+  const [workDuration, setWorkDuration] = useState(settings.workDuration.toString());
+  const [shortBreakDuration, setShortBreakDuration] = useState(settings.shortBreakDuration.toString());
+  const [longBreakDuration, setLongBreakDuration] = useState(settings.longBreakDuration.toString());
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  // Функція форматування часу в секундах у формат MM:SS
+  // Formatowanie czasu
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // Функція обчислення прогресу для кругового індикатора
-  // Повертає значення від 0 до 1, що відображає пройдену частину поточної сесії
+  // Obczislenije procenta dla krugowogo indikatora
   const getProgress = () => {
     let totalSeconds;
     
-    // Визначаємо загальну тривалість поточної сесії в секундах
     switch (currentSession) {
       case SESSION_TYPES.WORK:
         totalSeconds = settings.workDuration * 60;
@@ -67,13 +60,12 @@ const PomodoroScreen = () => {
         totalSeconds = settings.workDuration * 60;
     }
     
-    // Обчислюємо прогрес на основі залишку часу відносно загальної тривалості
+    // Calculate progress based on time remaining vs total time
     const progress = (totalSeconds - timeLeft) / totalSeconds;
     return progress;
   };
 
-  // Функція для отримання кольору поточної сесії
-  // Використовується для візуального відображення типу сесії
+  // Get current session color
   const getCurrentSessionColor = () => {
     switch (currentSession) {
       case SESSION_TYPES.WORK:
@@ -87,15 +79,13 @@ const PomodoroScreen = () => {
     }
   };
 
-  // Компонент вкладки для перемикання типу сесії
-  // Дозволяє користувачу вибирати між робочою сесією та перервами
+  // Komponent wkładki dla perekluczenija tipa sessiji
   const SessionTab = ({ title, type, current }) => (
     <TouchableOpacity
       style={[
         styles.sessionTab,
         current === type && styles.activeSessionTab,
         current === type && {
-          // Динамічно встановлюємо колір фону та рамки залежно від типу сесії
           backgroundColor: 
             type === SESSION_TYPES.WORK 
               ? SESSION_COLORS.work 
@@ -111,13 +101,12 @@ const PomodoroScreen = () => {
         }
       ]}
       onPress={() => {
-        // При зміні типу сесії скидаємо таймер та перемикаємося на новий тип
         if (current !== type) {
           resetTimer();
           skipSession(type);
         }
       }}
-      disabled={isRunning}  // Вимикаємо кнопку під час роботи таймера
+      disabled={isRunning}
     >
       <Text style={[
         styles.sessionTabText,
@@ -128,25 +117,21 @@ const PomodoroScreen = () => {
     </TouchableOpacity>
   );
 
-  // Функція збереження налаштувань таймера
-  // Викликається при натисканні кнопки "Зберегти" в діалозі налаштувань
+  // Zachowujemy nastrojki
   const handleSaveSettings = () => {
-    // Перетворюємо введені значення в числа
     const workValue = parseInt(workDuration);
     const shortBreakValue = parseInt(shortBreakDuration);
     const longBreakValue = parseInt(longBreakDuration);
     
-    // Валідація введених значень
+    // Walidacija
     if (isNaN(workValue) || workValue <= 0 || 
         isNaN(shortBreakValue) || shortBreakValue <= 0 || 
         isNaN(longBreakValue) || longBreakValue <= 0) {
-      // Якщо значення недійсні, показуємо повідомлення про помилку
       setSnackbarMessage('Wszystkie wartości muszą być dodatnimi liczbami');
       setSnackbarVisible(true);
       return;
     }
     
-    // Оновлюємо налаштування в контексті Pomodoro
     updateSettings({
       ...settings,
       workDuration: workValue,
@@ -154,12 +139,10 @@ const PomodoroScreen = () => {
       longBreakDuration: longBreakValue,
     });
     
-    // Закриваємо діалог налаштувань
     setSettingsVisible(false);
   };
 
-  // Функція для отримання заголовка поточної сесії
-  // Використовується для відображення типу сесії на таймері
+  // Otrzymujemy zagolowok sessiji
   const getSessionTitle = () => {
     switch (currentSession) {
       case SESSION_TYPES.WORK:
@@ -173,10 +156,8 @@ const PomodoroScreen = () => {
     }
   };
 
-  // Компонент кругового прогресу
-  // Відображає візуальний прогрес поточної сесії у вигляді кола
+  // Update CircularProgress component
   const CircularProgress = ({ progress, size, strokeWidth }) => {
-    // Обчислюємо параметри кола для SVG
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
     const strokeDashoffset = circumference * (1 - progress);
@@ -184,7 +165,6 @@ const PomodoroScreen = () => {
     
     return (
       <Svg width={size} height={size}>
-        {/* Фонове коло (сіре) */}
         <Circle
           stroke={'#E8E8E8'}
           fill="none"
@@ -193,7 +173,6 @@ const PomodoroScreen = () => {
           r={radius}
           strokeWidth={strokeWidth}
         />
-        {/* Коло прогресу (кольорове) */}
         <Circle
           stroke={currentColor}
           fill="none"
@@ -210,30 +189,27 @@ const PomodoroScreen = () => {
     );
   };
 
-  // Рендеримо інтерфейс екрану Pomodoro
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: getCurrentSessionColor() }]}>
     <View style={styles.container}>
-      {/* Панель вкладок для перемикання між типами сесій */}
       <View style={styles.tabs}>
         <SessionTab
           title="Praca"
-          type={SESSION_TYPES.WORK}
+            type={SESSION_TYPES.WORK}
           current={currentSession}
         />
         <SessionTab
           title="Krótka przerwa"
-          type={SESSION_TYPES.SHORT_BREAK}
+            type={SESSION_TYPES.SHORT_BREAK}
           current={currentSession}
         />
         <SessionTab
           title="Długa przerwa"
-          type={SESSION_TYPES.LONG_BREAK}
+            type={SESSION_TYPES.LONG_BREAK}
           current={currentSession}
         />
       </View>
 
-      {/* Контейнер з таймером та круговим індикатором прогресу */}
       <View style={styles.timerContainer}>
         <View style={styles.progressContainer}>
           <CircularProgress
@@ -248,7 +224,6 @@ const PomodoroScreen = () => {
         </View>
       </View>
 
-      {/* Контейнер зі статистикою (кількість завершених сесій) */}
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
             <Text style={[styles.statValue, { color: getCurrentSessionColor() }]}>{sessionsCompleted}</Text>
@@ -256,7 +231,6 @@ const PomodoroScreen = () => {
         </View>
       </View>
 
-      {/* Панель керування таймером (запуск/пауза, скидання, налаштування) */}
       <View style={styles.controlsContainer}>
           {isRunning ? (
             <IconButton
@@ -287,12 +261,11 @@ const PomodoroScreen = () => {
         />
       </View>
 
-      {/* Діалогове вікно налаштувань таймера */}
+        {/* Dialogowe okno ustawień */}
       <Portal>
           <Dialog visible={settingsVisible} onDismiss={() => setSettingsVisible(false)} style={styles.dialog}>
             <Dialog.Title style={styles.dialogTitle}>Ustawienia timera</Dialog.Title>
           <Dialog.Content>
-              {/* Налаштування тривалості робочої сесії */}
               <View style={styles.settingsGroup}>
                 <Text style={styles.settingLabel}>Czas pracy (minuty)</Text>
               <TextInput
@@ -305,7 +278,6 @@ const PomodoroScreen = () => {
               />
             </View>
             
-              {/* Налаштування тривалості короткої перерви */}
               <View style={styles.settingsGroup}>
                 <Text style={styles.settingLabel}>Czas krótkiej przerwy (minuty)</Text>
               <TextInput
@@ -318,7 +290,6 @@ const PomodoroScreen = () => {
               />
             </View>
             
-              {/* Налаштування тривалості довгої перерви */}
               <View style={styles.settingsGroup}>
                 <Text style={styles.settingLabel}>Czas długiej przerwy (minuty)</Text>
               <TextInput
@@ -332,7 +303,6 @@ const PomodoroScreen = () => {
             </View>
           </Dialog.Content>
           
-            {/* Кнопки дій діалогу */}
             <Dialog.Actions style={styles.dialogActions}>
               <Button 
                 mode="outlined" 
@@ -354,7 +324,6 @@ const PomodoroScreen = () => {
         </Dialog>
       </Portal>
 
-      {/* Snackbar для відображення повідомлень про помилки */}
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
@@ -367,24 +336,19 @@ const PomodoroScreen = () => {
   );
 };
 
-// Стилі для компонентів екрану Pomodoro
 const styles = StyleSheet.create({
-  // Безпечна зона для пристроїв з вирізами екрану
   safeArea: {
     flex: 1,
   },
-  // Основний контейнер
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  // Контейнер для вкладок перемикання типу сесії
   tabs: {
     flexDirection: 'row',
     marginVertical: 16,
     marginHorizontal: 16,
   },
-  // Стиль окремої вкладки
   sessionTab: {
     flex: 1,
     paddingVertical: 8,
@@ -395,130 +359,106 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E8E8E8',
   },
-  // Стиль активної вкладки
   activeSessionTab: {
     borderWidth: 0,
   },
-  // Стиль тексту вкладки
   sessionTabText: {
     color: '#757575',
     fontSize: 13,
     fontWeight: '500',
   },
-  // Стиль тексту активної вкладки
   activeSessionTabText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  // Контейнер для таймера
   timerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Контейнер для кругового індикатора прогресу
   progressContainer: {
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Контейнер для тексту таймера (розміщується по центру кругового індикатора)
   timeTextContainer: {
     position: 'absolute',
     alignItems: 'center',
   },
-  // Стиль тексту часу
   timeText: {
     fontSize: 48,
     fontWeight: 'bold',
   },
-  // Стиль заголовка сесії
   sessionTitle: {
     fontSize: 18,
     marginTop: 8,
   },
-  // Контейнер для статистики
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginVertical: 24,
   },
-  // Стиль елемента статистики
   statItem: {
     alignItems: 'center',
     marginHorizontal: 16,
   },
-  // Стиль значення статистики
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
   },
-  // Стиль підпису статистики
   statLabel: {
     fontSize: 14,
     color: '#757575',
     marginTop: 4,
   },
-  // Контейнер для кнопок керування
   controlsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 24,
   },
-  // Стиль кнопки керування
   controlButton: {
     marginHorizontal: 16,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.lightGray,
   },
-  // Стиль діалогового вікна
   dialog: {
     backgroundColor: 'white',
     borderRadius: theme.roundness,
   },
-  // Стиль заголовка діалогу
   dialogTitle: {
     textAlign: 'center',
     color: theme.colors.primary,
     fontWeight: 'bold',
   },
-  // Стиль групи налаштувань
   settingsGroup: {
     marginBottom: theme.spacing.m,
   },
-  // Стиль підпису налаштування
   settingLabel: {
     fontSize: 16,
     marginBottom: theme.spacing.s,
     color: theme.colors.text,
     fontWeight: '500',
   },
-  // Стиль поля введення
   input: {
     backgroundColor: theme.colors.surface,
   },
-  // Стиль панелі дій діалогу
   dialogActions: {
     padding: theme.spacing.m,
     borderTopWidth: 1,
     borderTopColor: theme.colors.lightGray,
     justifyContent: 'flex-end',
   },
-  // Стиль кнопки скасування
   cancelButton: {
     marginRight: theme.spacing.s,
     borderColor: theme.colors.darkGray,
   },
-  // Стиль тексту кнопки скасування
   cancelButtonLabel: {
     color: theme.colors.darkGray,
   },
-  // Стиль кнопки збереження
   saveButton: {
     backgroundColor: theme.colors.primary,
   },
-  // Стиль тексту кнопки збереження
   saveButtonLabel: {
     color: 'white',
     fontWeight: 'bold',

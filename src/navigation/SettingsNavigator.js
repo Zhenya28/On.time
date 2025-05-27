@@ -4,47 +4,37 @@ import SettingsScreen from '../screens/settings/SettingsScreen';
 import AboutScreen from '../screens/about/AboutScreen';
 import theme from '../styles/theme';
 
-// Створюємо об'єкт навігаційного стеку
-// Stack.Navigator дозволяє переміщатися між різними екранами налаштувань
-// з навігацією у стилі стеку (екрани відкриваються поверх один одного)
 const Stack = createStackNavigator();
 
-// Компонент SettingsNavigator
-// Відповідає за навігацію між різними екранами розділу налаштувань
-// Включає головний екран налаштувань та екран "Про додаток"
 const SettingsNavigator = () => {
   return (
     <Stack.Navigator
       screenOptions={{
-        // Стиль для заголовка екрану
         headerStyle: {
-          backgroundColor: theme.colors.primary, // Колір фону заголовка з теми додатку
+          backgroundColor: theme.colors.primary,
         },
-        headerTintColor: '#fff',              // Білий колір тексту заголовка
+        headerTintColor: '#fff',
         headerTitleStyle: {
-          fontWeight: 'bold',                 // Жирний шрифт для заголовка
+          fontWeight: 'bold',
         },
       }}
     >
-      {/* Головний екран налаштувань */}
       <Stack.Screen
-        name="SettingsMain"                   // Внутрішня назва екрану для навігації
-        component={SettingsScreen}            // Компонент, який буде відображатися
+        name="SettingsMain"
+        component={SettingsScreen}
         options={{ 
-          title: 'Ustawienia',                // Заголовок екрану, що відображається користувачу
+          title: 'Ustawienia',
         }}
       />
-      
-      {/* Екран інформації про додаток */}
       <Stack.Screen
-        name="About"                          // Внутрішня назва екрану для навігації
-        component={AboutScreen}               // Компонент, який буде відображатися
+        name="About"
+        component={AboutScreen}
         options={{ 
-          title: 'O aplikacji',               // Заголовок екрану, що відображається користувачу
+          title: 'O aplikacji',
         }}
       />
     </Stack.Navigator>
   );
 };
 
-export default SettingsNavigator;
+export default SettingsNavigator; 

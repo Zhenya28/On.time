@@ -9,32 +9,26 @@ import {
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Контекст для управління авторизацією користувача в додатку
-// Зберігає стан користувача та надає функції для авторизації
+// Контекст для управління авторизацією
 const AuthContext = createContext({});
 
-// Хук для зручного доступу до контексту авторизації з будь-якого компонента
 export const useAuth = () => useContext(AuthContext);
 
-// Провайдер контексту авторизації, який надає доступ до функцій та стану для дочірніх компонентів
 export const AuthProvider = ({ children }) => {
-  // Стан для зберігання інформації про поточного користувача
   const [user, setUser] = useState(null);
-  // Стан для відстеження процесу завантаження стану авторизації
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Підписка на зміни стану авторизації в Firebase
-    // Викликається при вході, виході або зміні сесії користувача
+    // Listen for auth state changes and restore user session
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Користувач авторизований
+        // User is signed in
         setUser({
           uid: user.uid,
           email: user.email,
           displayName: user.displayName
         });
-        // Зберігаємо дані користувача в AsyncStorage для збереження сесії
+        // Save user data to AsyncStorage
         try {
           await AsyncStorage.setItem('user', JSON.stringify({
             uid: user.uid,
@@ -42,24 +36,21 @@ export const AuthProvider = ({ children }) => {
             displayName: user.displayName
           }));
         } catch (error) {
-          console.error('Błąd podczas zapisywania danych użytkownika:', error);
+          console.error('Error saving user data:', error);
         }
-      } else {
-        // Користувач неавторизований (вийшов із системи)
+        } else {
+        // User is signed out
         setUser(null);
-        // Видаляємо збережені дані користувача з AsyncStorage
         try {
           await AsyncStorage.removeItem('user');
         } catch (error) {
-          console.error('Błąd podczas usuwania danych użytkownika:', error);
+          console.error('Error removing user data:', error);
         }
       }
-      // Завершуємо завантаження стану авторизації
       setLoading(false);
     });
 
-    // Перевіряємо збережені дані користувача при запуску додатку
-    // Це дозволяє відновити сесію користувача без повторної авторизації
+    // Check for stored user data on app launch
     const bootstrapAsync = async () => {
       try {
         const storedUser = await AsyncStorage.getItem('user');
@@ -67,33 +58,30 @@ export const AuthProvider = ({ children }) => {
           setUser(JSON.parse(storedUser));
         }
       } catch (error) {
-        console.error('Błąd podczas odczytu danych użytkownika:', error);
+        console.error('Error reading user data:', error);
       }
     };
 
-    // Викликаємо функцію перевірки збережених даних
     bootstrapAsync();
 
-    // Функція очищення - відписуємось від слухача змін авторизації при розмонтуванні компонента
+    // Cleanup subscription
     return () => unsubscribe();
   }, []);
 
-  // Функція для оновлення імені користувача в профілі
-  // Оновлює ім'я в Firebase, в локальному стані та в AsyncStorage
+  // Функція для оновлення імені користувача
   const updateUserName = async (newName) => {
     try {
-      // Оновлюємо ім'я користувача в Firebase
       await updateProfile(auth.currentUser, {
         displayName: newName
       });
 
-      // Оновлюємо локальний стан користувача
+      // Update local user state
       setUser(prev => ({
         ...prev,
         displayName: newName
       }));
 
-      // Оновлюємо дані в AsyncStorage
+      // Update AsyncStorage
       const updatedUser = {
         uid: user.uid,
         email: user.email,
@@ -107,19 +95,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Функція для реєстрації нового користувача
-  // Створює новий обліковий запис у Firebase з ім'ям, електронною поштою та паролем
+  // Функція для реєстрації користувача
   const register = async (name, email, password) => {
     try {
-      // Створюємо нового користувача в Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Оновлюємо профіль користувача, додаючи ім'я
+      // Update the user's profile with their name
       await updateProfile(userCredential.user, {
         displayName: name
       });
       
-      // Оновлюємо локальний стан користувача з ім'ям
+      // Update local user state with the name
       setUser({
         uid: userCredential.user.uid,
         email: userCredential.user.email,
@@ -133,10 +119,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Функція для входу в систему
-  // Авторизує користувача за допомогою електронної пошти та пароля
   const login = async (email, password) => {
     try {
-      // Здійснюємо вхід в Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       return { success: true, user: userCredential.user };
     } catch (error) {
@@ -145,12 +129,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Функція для виходу з системи
-  // Завершує сесію користувача та видаляє локальні дані
   const logout = async () => {
     try {
-      // Виходимо з Firebase Authentication
       await signOut(auth);
-      // Видаляємо збережені дані користувача з AsyncStorage
       await AsyncStorage.removeItem('user');
       return { success: true };
     } catch (error) {
@@ -158,15 +139,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Надаємо контекст авторизації з доступом до стану та функцій для дочірніх компонентів
   return (
     <AuthContext.Provider value={{ 
-        user,         // Інформація про поточного користувача
-        loading,      // Стан завантаження аутентифікації
-        login,        // Функція для входу в систему
-        register,     // Функція для реєстрації
-        logout,       // Функція для виходу з системи
-        updateUserName // Функція для оновлення імені користувача
+        user,
+        loading,
+      login, 
+        register,
+        logout,
+      updateUserName 
     }}>
       {children}
     </AuthContext.Provider>

@@ -77,6 +77,46 @@ export const TaskProvider = ({ children }) => {
     persistTasks();
   }, [tasks, user?.email]);
 
+  // Tworzenie przykładowych zadań
+  const generateExampleTasks = () => {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    
+    return [
+      {
+        id: '1',
+        title: 'Witaj w aplikacji On.Time!',
+        description: 'Dziękujemy za rejestrację. To jest Twoje pierwsze zadanie.',
+        priority: 'medium',
+        dueDate: today.toISOString(),
+        completed: false,
+        createdAt: new Date().toISOString(),
+        reminder: false,
+      },
+      {
+        id: '2',
+        title: 'Sprawdź widok kalendarza',
+        description: 'Możesz przeglądać swoje zadania w widoku kalendarza.',
+        priority: 'low',
+        dueDate: tomorrow.toISOString(),
+        completed: false,
+        createdAt: new Date().toISOString(),
+        reminder: false,
+      },
+      {
+        id: '3',
+        title: 'Wypróbuj Timer Pomodoro',
+        description: 'Użyj techniki Pomodoro, aby zwiększyć swoją produktywność.',
+        priority: 'high',
+        dueDate: today.toISOString(),
+        completed: false,
+        createdAt: new Date().toISOString(),
+        reminder: false,
+      },
+    ];
+  };
+
   // Zapisywanie zadań
   const saveTasks = async (updatedTasks) => {
     if (!user) return;

@@ -4,21 +4,15 @@ import { Text, Icon, IconButton } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import theme from '../../styles/theme';
 
-// Компонент TaskItem
-// Відображає окреме завдання у списку з можливістю свайпу для видалення
-// та функціями відмітки завдання як виконаного
+// Komponent dla wyświetlania jednego zadania
 const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
-  // Функція рендерингу дій при свайпі вправо
-  // Відображає кнопку видалення з анімацією
   const renderRightActions = (progress, dragX) => {
-    // Створюємо анімацію масштабування під час свайпу
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
       outputRange: [1, 0],
       extrapolate: 'clamp',
     });
 
-    // Повертаємо анімований компонент кнопки видалення
     return (
       <TouchableOpacity 
         style={styles.deleteAction}
@@ -36,8 +30,7 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
     );
   };
 
-  // Функція для отримання кольору відповідно до пріоритету завдання
-  // Повертає різні кольори для різних рівнів пріоритету
+  // Get priority color for checkbox
   const getPriorityColor = () => {
     if (task.completed) return theme.colors.disabled;
     
@@ -53,8 +46,7 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
     }
   };
 
-  // Функція форматування дати та часу
-  // Перетворює дату з ISO формату у читабельний рядок
+  // Format date and time
   const formatDateTime = () => {
     if (!task.dueDate) return null;
     
@@ -75,46 +67,37 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
     }
   };
 
-  // Отримуємо відформатований рядок дати та часу
   const dateTimeString = formatDateTime();
 
-  // Рендерим інтерфейс елемента завдання
   return (
     <View style={styles.itemWrapper}>
-      {/* Компонент свайпу для видалення завдання */}
       <Swipeable
         renderRightActions={renderRightActions}
         onSwipeableRightOpen={() => onDelete(task.id)}
         rightThreshold={40}
         overshootRight={false}
       >
-        {/* Основний контейнер завдання */}
         <TouchableOpacity 
           style={styles.container}
           onPress={() => onEdit(task)}
           activeOpacity={0.7}
         >
-          {/* Контейнер для чекбоксу */}
           <TouchableOpacity 
             style={styles.checkboxContainer}
             onPress={() => onToggleComplete(task.id)}
           >
-            {/* Чекбокс з динамічним стилем залежно від пріоритету та стану */}
             <View style={[
               styles.checkbox,
               { borderColor: getPriorityColor() },
               task.completed && { backgroundColor: getPriorityColor() }
             ]}>
-              {/* Відмітка виконання (видима тільки якщо завдання виконане) */}
               {task.completed && (
                 <View style={styles.checkmark} />
               )}
             </View>
           </TouchableOpacity>
 
-          {/* Контейнер для вмісту завдання */}
           <View style={styles.contentContainer}>
-            {/* Заголовок завдання */}
             <Text 
               style={[
                 styles.title,
@@ -125,7 +108,6 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
               {task.title}
             </Text>
             
-            {/* Опис завдання (умовно видимий) */}
             {task.description && (
               <Text 
                 style={[
@@ -138,7 +120,6 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
               </Text>
             )}
 
-            {/* Дата та час виконання (умовно видимі) */}
             {dateTimeString && (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={[
@@ -147,13 +128,12 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
                 ]}>
                   {dateTimeString}
                 </Text>
-                {/* Іконка нагадування (видима, якщо нагадування включене) */}
                 {task.reminder && (
                   <Icon
                     source="clock-outline"
                     size={14}
                     color={task.completed ? theme.colors.disabled : theme.colors.primary}
-                    style={{ marginLeft: 8, marginBottom: -1 }}
+                    style={{ marginLeft: 6, marginBottom: -1 }}
                   />
                 )}
               </View>
@@ -165,16 +145,13 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
   );
 };
 
-// Стилі для компонентів елемента завдання
 const styles = StyleSheet.create({
-  // Зовнішня обгортка елемента з відступами
   itemWrapper: {
     marginHorizontal: 16,
     marginVertical: 4,
     borderRadius: 8,
     overflow: 'hidden',
   },
-  // Основний контейнер елемента завдання
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,13 +163,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     minHeight: 64,
   },
-  // Контейнер для чекбоксу з відступами
   checkboxContainer: {
     alignSelf: 'center',
     marginRight: 12,
     padding: 4,
   },
-  // Стиль для самого чекбоксу
   checkbox: {
     width: 20,
     height: 20,
@@ -201,49 +176,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Стиль для відмітки виконання всередині чекбоксу
   checkmark: {
     width: 10,
     height: 10,
     backgroundColor: 'white',
   },
-  // Контейнер для вмісту завдання
   contentContainer: {
     flex: 1,
     justifyContent: 'center',
   },
-  // Стиль для заголовка завдання
   title: {
     fontSize: 16,
     color: theme.colors.text,
     marginBottom: 2,
   },
-  // Стиль для заголовка виконаного завдання
   completedTitle: {
     textDecorationLine: 'line-through',
     color: theme.colors.disabled,
   },
-  // Стиль для опису завдання
   description: {
     fontSize: 14,
     color: theme.colors.darkGray,
     marginBottom: 2,
   },
-  // Стиль для опису виконаного завдання
   completedDescription: {
     textDecorationLine: 'line-through',
     color: theme.colors.disabled,
   },
-  // Стиль для дати та часу
   dateTime: {
     fontSize: 12,
     color: theme.colors.primary,
   },
-  // Стиль для дати та часу виконаного завдання
   completedDateTime: {
     color: theme.colors.disabled,
   },
-  // Стиль для дії видалення при свайпі
   deleteAction: {
     backgroundColor: '#FF486A',
     width: 80,
@@ -251,13 +217,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Стиль для вмісту дії видалення
   deleteActionContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Стиль для іконки видалення
   deleteIcon: {
     margin: 0,
   },
