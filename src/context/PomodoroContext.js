@@ -44,23 +44,43 @@ export const PomodoroProvider = ({ children }) => {
   const { user } = useAuth();
   const timerRef = useRef(null);
 
-  // Load settings from AsyncStorage
+  // Load settings and sessions completed from AsyncStorage
   useEffect(() => {
-    const loadSettings = async () => {
+    const loadData = async () => {
       if (!user) return;
       
       try {
         const savedSettings = await AsyncStorage.getItem(`@pomodoro_settings_${user.email}`);
+        const savedSessions = await AsyncStorage.getItem(`@pomodoro_sessions_${user.email}`);
+        
         if (savedSettings) {
           setSettings(JSON.parse(savedSettings));
         }
+        if (savedSessions) {
+          setSessionsCompleted(parseInt(savedSessions));
+        }
       } catch (error) {
-        console.error('Error loading pomodoro settings:', error);
+        console.error('Error loading pomodoro data:', error);
       }
     };
 
-    loadSettings();
+    loadData();
   }, [user?.email]);
+
+  // Save sessions completed to AsyncStorage whenever it changes
+  useEffect(() => {
+    const saveSessions = async () => {
+      if (!user) return;
+      
+      try {
+        await AsyncStorage.setItem(`@pomodoro_sessions_${user.email}`, sessionsCompleted.toString());
+      } catch (error) {
+        console.error('Error saving sessions completed:', error);
+      }
+    };
+
+    saveSessions();
+  }, [sessionsCompleted, user?.email]);
 
   // Save settings to AsyncStorage whenever they change
   useEffect(() => {
@@ -85,12 +105,12 @@ export const PomodoroProvider = ({ children }) => {
           if (prevTime <= 1) {
             // Timer completed
             clearInterval(timerRef.current);
-          handleSessionComplete();
-          return 0;
-        }
+            handleSessionComplete();
+            return 0;
+          }
           return prevTime - 1;
-      });
-    }, 1000);
+        });
+      }, 1000);
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -111,7 +131,7 @@ export const PomodoroProvider = ({ children }) => {
       
       // Show notification
       if (settings.notifications) {
-        await scheduleNotification('Work session completed!', 'Time for a break.');
+        await scheduleNotification('Sesja pracy zakończona!', 'Czas na przerwę.');
       }
       
       // Determine next break type
@@ -127,7 +147,7 @@ export const PomodoroProvider = ({ children }) => {
     } else {
       // Break completed
       if (settings.notifications) {
-        await scheduleNotification('Break completed!', 'Time to work.');
+        await scheduleNotification('Przerwa zakończona!', 'Czas wrócić do pracy.');
       }
       
       setCurrentSession(SESSION_TYPES.WORK);
@@ -183,7 +203,20 @@ export const PomodoroProvider = ({ children }) => {
     setIsRunning(false);
     setTimeLeft(settings.workDuration * 60);
     setCurrentSession(SESSION_TYPES.WORK);
+  };
+
+  const resetAll = async () => {
+    setIsRunning(false);
+    setTimeLeft(settings.workDuration * 60);
+    setCurrentSession(SESSION_TYPES.WORK);
     setSessionsCompleted(0);
+    if (user) {
+      try {
+        await AsyncStorage.removeItem(`@pomodoro_sessions_${user.email}`);
+      } catch (error) {
+        console.error('Error resetting sessions:', error);
+      }
+    }
   };
 
   const skipSession = (targetSession) => {
@@ -232,6 +265,7 @@ export const PomodoroProvider = ({ children }) => {
         startTimer,
         pauseTimer,
         resetTimer,
+        resetAll,
         skipSession,
         SESSION_TYPES
       }}
