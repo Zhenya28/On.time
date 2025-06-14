@@ -183,15 +183,9 @@ onRequestClose={onClose}
 <View style={styles.modalOverlay}>
 <Surface style={styles.modalContainer}>
 <View style={styles.header}>
-<Text style={styles.title}>
-  {initialTask ? 'Edytuj zadanie' : 'Dodaj nowe zadanie'}
-</Text>
-<IconButton
-  icon="close"
-  size={24}
-  onPress={onClose}
-  style={styles.closeButton}
-/>
+  <Text style={styles.title}>
+    {initialTask ? 'Edytuj zadanie' : 'Dodaj nowe zadanie'}
+  </Text>
 </View>
 
 <View style={{ flex: 1 }}>
@@ -416,10 +410,6 @@ title: {
 fontSize: 20,
 fontWeight: 'bold',
 color: 'white',
-},
-closeButton: {
-margin: 0,
-marginRight: -theme.spacing.s,
 },
 formContainer: {
 padding: theme.spacing.m,

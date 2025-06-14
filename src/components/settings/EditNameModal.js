@@ -79,6 +79,7 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 8,
+    backgroundColor: 'white',
   },
   errorText: {
     color: theme.colors.error,
