@@ -5,14 +5,12 @@ import { usePomodoro } from '../../context/PomodoroContext';
 import theme from '../../styles/theme';
 import Svg, { Circle } from 'react-native-svg';
 
-// Session type colors
 const SESSION_COLORS = {
-  work: '#FF486A',      // Red for work
-  shortBreak: '#24A19C', // Teal for short break
-  longBreak: '#218EFD',  // Blue for long break
+  work: '#FF486A',      
+  shortBreak: '#24A19C', 
+  longBreak: '#218EFD', 
 };
 
-// Ekran Pomodoro
 const PomodoroScreen = () => {
   const { 
     settings, 
@@ -35,14 +33,12 @@ const PomodoroScreen = () => {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  // Formatowanie czasu
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // Obczislenije procenta dla krugowogo indikatora
   const getProgress = () => {
     let totalSeconds;
     
@@ -60,12 +56,10 @@ const PomodoroScreen = () => {
         totalSeconds = settings.workDuration * 60;
     }
     
-    // Calculate progress based on time remaining vs total time
     const progress = (totalSeconds - timeLeft) / totalSeconds;
     return progress;
   };
 
-  // Get current session color
   const getCurrentSessionColor = () => {
     switch (currentSession) {
       case SESSION_TYPES.WORK:
@@ -79,7 +73,6 @@ const PomodoroScreen = () => {
     }
   };
 
-  // Komponent wkładki dla perekluczenija tipa sessiji
   const SessionTab = ({ title, type, current }) => (
     <TouchableOpacity
       style={[
@@ -117,13 +110,11 @@ const PomodoroScreen = () => {
     </TouchableOpacity>
   );
 
-  // Zachowujemy nastrojki
   const handleSaveSettings = () => {
     const workValue = parseInt(workDuration);
     const shortBreakValue = parseInt(shortBreakDuration);
     const longBreakValue = parseInt(longBreakDuration);
     
-    // Walidacija
     if (isNaN(workValue) || workValue <= 0 || 
         isNaN(shortBreakValue) || shortBreakValue <= 0 || 
         isNaN(longBreakValue) || longBreakValue <= 0) {
@@ -142,7 +133,6 @@ const PomodoroScreen = () => {
     setSettingsVisible(false);
   };
 
-  // Otrzymujemy zagolowok sessiji
   const getSessionTitle = () => {
     switch (currentSession) {
       case SESSION_TYPES.WORK:
@@ -155,8 +145,6 @@ const PomodoroScreen = () => {
         return 'Pomodoro';
     }
   };
-
-  // Update CircularProgress component
   const CircularProgress = ({ progress, size, strokeWidth }) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
