@@ -1,120 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator, ScrollView, Image, useWindowDimensions } from 'react-native';
 import { Text, FAB, Chip, Searchbar, Divider, Banner, IconButton } from 'react-native-paper';
-import { useTask } from '../../context/TaskContext';
-import TaskItem from '../../components/tasks/TaskItem';
-import TaskFormModal from '../../components/tasks/TaskFormModal';
-import theme from '../../styles/theme';
+import { useTask } from '../../context/TaskContext'; // Хук для роботи з завданнями.
+import TaskItem from '../../components/tasks/TaskItem'; // Компонент для відображення одного завдання.
+import TaskFormModal from '../../components/tasks/TaskFormModal'; // Модальне вікно для додавання/редагування завдань.
+import theme from '../../styles/theme'; // Імпортуємо тему оформлення.
 
 const TasksScreen = () => {
   // Хуки та стани
-  const { tasks, loading, addTask, updateTask, deleteTask, toggleTaskCompletion } = useTask();
-  const [filteredTasks, setFilteredTasks] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('all');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [currentTask, setCurrentTask] = useState(null);
-  const [bannerVisible, setBannerVisible] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0); // Ключ для примусового оновлення
-  const { width } = useWindowDimensions();
-  const isWide = width >= 700; // np. iPad landscape
+  const { tasks, loading, addTask, updateTask, deleteTask, toggleTaskCompletion } = useTask(); // Отримуємо функції та дані з TaskContext.
+  const [filteredTasks, setFilteredTasks] = useState([]); // Відфільтровані завдання для відображення.
+  const [searchQuery, setSearchQuery] = useState(''); // Текст пошукового запиту.
+  const [filter, setFilter] = useState('all'); // Поточний фільтр завдань.
+  const [modalVisible, setModalVisible] = useState(false); // Видимість модального вікна.
+  const [currentTask, setCurrentTask] = useState(null); // Поточне завдання для редагування.
+  const [bannerVisible, setBannerVisible] = useState(false); // Видимість банеру (не використовується).
+  const [taskToDelete, setTaskToDelete] = useState(null); // Завдання для видалення (не використовується).
+  const [refreshKey, setRefreshKey] = useState(0); // Ключ для примусового оновлення списку.
+  const { width } = useWindowDimensions(); // Ширина екрану.
+  const isWide = width >= 700; // Чи є екран широким (наприклад, iPad в альбомній орієнтації).
 
   // Фільтрація та пошук завдань
   useEffect(() => {
-    let result = [...tasks];
-    
+    let result = [...tasks]; // Копіюємо список завдань.
+
     // Фільтр за статусом
     if (filter === 'active') {
-      result = result.filter(task => !task.completed);
+      result = result.filter(task => !task.completed); // Тільки активні.
     } else if (filter === 'completed') {
-      result = result.filter(task => task.completed);
+      result = result.filter(task => task.completed); // Тільки завершені.
     } else if (filter === 'today') {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0]; // Сьогоднішня дата у форматі РРРР-ММ-ДД.
       result = result.filter(task => {
         if (!task.dueDate) return false;
-        return task.dueDate.split('T')[0] === today;
+        return task.dueDate.split('T')[0] === today; // Завдання на сьогодні.
       });
     } else if (filter === 'high') {
-      result = result.filter(task => task.priority === 'high');
+      result = result.filter(task => task.priority === 'high'); // Завдання з високим пріоритетом.
     }
-    
+
     // Пошук
     if (searchQuery) {
       const lowercasedQuery = searchQuery.toLowerCase();
       result = result.filter(
-        task => 
-          task.title.toLowerCase().includes(lowercasedQuery) || 
-          (task.description && task.description.toLowerCase().includes(lowercasedQuery))
+        task =>
+          task.title.toLowerCase().includes(lowercasedQuery) ||
+          (task.description && task.description.toLowerCase().includes(lowercasedQuery)) // Пошук у заголовку та описі.
       );
     }
-    
+
     // Сортування: спочатку невиконані, потім за датою, потім за пріоритетом
     result.sort((a, b) => {
       // Спочатку невиконані
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
       }
-      
+
       // Потім за датою (якщо є)
       if (a.dueDate && b.dueDate) {
         return new Date(a.dueDate) - new Date(b.dueDate);
       }
-      
+
       // Завдання з датою показуємо вище ніж без дати
       if (a.dueDate && !b.dueDate) return -1;
       if (!a.dueDate && b.dueDate) return 1;
-      
+
       // За пріоритетом
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
-    
-    setFilteredTasks(result);
+
+    setFilteredTasks(result); // Оновлюємо відфільтрований список.
   }, [tasks, filter, searchQuery, refreshKey]);
 
   // Обробка додавання/редагування завдання
   const handleSaveTask = async (taskData) => {
     if (currentTask) {
-      await updateTask(currentTask.id, taskData);
+      await updateTask(currentTask.id, taskData); // Оновлюємо існуюче завдання.
     } else {
-      await addTask(taskData);
+      await addTask(taskData); // Додаємо нове завдання.
     }
-    setRefreshKey(prev => prev + 1); // Примусове оновлення списку
+    setModalVisible(false); // Закриваємо модальне вікно.
+    setRefreshKey(prev => prev + 1); // Примусове оновлення списку.
   };
 
   // Обробка видалення завдання
   const handleDelete = async (taskId) => {
-    await deleteTask(taskId);
-    setRefreshKey(prev => prev + 1); // Примусове оновлення списку
+    await deleteTask(taskId); // Видаляємо завдання.
+    setRefreshKey(prev => prev + 1); // Примусове оновлення списку.
   };
 
   // Обробка зміни статусу виконання
   const handleToggleCompletion = async (taskId) => {
-    await toggleTaskCompletion(taskId);
-    setRefreshKey(prev => prev + 1); // Примусове оновлення списку
+    await toggleTaskCompletion(taskId); // Перемикаємо статус виконання.
+    setRefreshKey(prev => prev + 1); // Примусове оновлення списку.
   };
 
   // Відкриття модального вікна для редагування
   const handleEdit = (task) => {
-    setCurrentTask(task);
-    setModalVisible(true);
+    setCurrentTask(task); // Встановлюємо поточне завдання для редагування.
+    setModalVisible(true); // Відкриваємо модальне вікно.
   };
 
   // Відкриття модального вікна для додавання
   const openAddTaskModal = () => {
-    setCurrentTask(null);
-    setModalVisible(true);
+    setCurrentTask(null); // Скидаємо поточне завдання.
+    setModalVisible(true); // Відкриваємо модальне вікно.
   };
 
-  // Helper to group tasks by priority
-  const groupTasksByPriority = (tasks) => {
+  // Допоміжна функція для групування завдань за пріоритетом
+  const groupTasksByPriority = (tasksToGroup) => {
     const groups = {
       high: [],
       medium: [],
       low: [],
     };
-    tasks.forEach(task => {
+    tasksToGroup.forEach(task => {
       if (task.priority === 'high') groups.high.push(task);
       else if (task.priority === 'medium') groups.medium.push(task);
       else groups.low.push(task);
@@ -122,7 +123,7 @@ const TasksScreen = () => {
     return groups;
   };
 
-  // Section header labels and colors
+  // Мітки та кольори для заголовків секцій
   const PRIORITY_LABELS = {
     high: 'Wysoki priorytet',
     medium: 'Średni priorytet',
@@ -134,7 +135,7 @@ const TasksScreen = () => {
     low: '#72BF78',
   };
 
-  // Render grouped tasks with section headers
+  // Відображення згрупованих завдань із заголовками секцій
   const renderGroupedTasks = () => {
     const groups = groupTasksByPriority(filteredTasks);
     const sections = [];
@@ -169,26 +170,24 @@ const TasksScreen = () => {
         </View>
       );
     }
-    
+
     return (
       <View style={styles.emptyContainer}>
-      
-        <Image 
-  source={require('../../../assets/images/empty-tasks.png')} 
-  style={styles.emptyImage}
-  resizeMode="contain"
-/>
-        
+        <Image
+          source={require('../../../assets/images/empty-tasks.png')}
+          style={styles.emptyImage}
+          resizeMode="contain"
+        />
         <Text style={styles.emptyText}>
-          {searchQuery 
-            ? 'Nie znaleziono zadań spełniających kryteria wyszukiwania' 
-            : filter === 'all' 
-              ? 'Brak zadań. Dotknij "+" aby dodać nowe zadanie.' 
+          {searchQuery
+            ? 'Nie znaleziono zadań spełniających kryteria wyszukiwania'
+            : filter === 'all'
+              ? 'Brak zadań. Dotknij "+" aby dodać nowe zadanie.'
               : 'Brak zadań w wybranej kategorii.'}
         </Text>
-        
+
         {filter !== 'all' && (
-          <Chip 
+          <Chip
             mode="flat"
             style={styles.coloredChip}
             onPress={() => setFilter('all')}
@@ -203,23 +202,27 @@ const TasksScreen = () => {
   };
 
   return (
+    // Головний контейнер екрану.
     <View style={styles.container}>
+      {/* Поле пошуку. */}
       <Searchbar
         placeholder="Szukaj zadań..."
-        onChangeText={setSearchQuery}
+        onChangeText={setSearchQuery} // Обробник зміни тексту пошуку.
         value={searchQuery}
         style={styles.searchBar}
         iconColor={theme.colors.primary}
       />
 
+      {/* Контейнер для фільтрів. */}
       <View style={styles.filtersContainer}>
         {isWide ? (
+          /* Фільтри для широких екранів (горизонтальний список). */
           <View style={styles.filtersRow}>
             <Chip
-              selected={filter === 'all'}
-              onPress={() => setFilter('all')}
-              style={[styles.flexChip, filter === 'all' && styles.coloredChip]}
-              textStyle={filter === 'all' ? styles.coloredChipText : {textAlign: 'center'}}
+              selected={filter === 'all'} // Чи вибраний цей фільтр.
+              onPress={() => setFilter('all')} // Обробник натискання на фільтр.
+              style={[styles.flexChip, filter === 'all' && styles.coloredChip]} // Стилі для вибраного фільтра.
+              textStyle={filter === 'all' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Wszystkie
@@ -228,7 +231,7 @@ const TasksScreen = () => {
               selected={filter === 'active'}
               onPress={() => setFilter('active')}
               style={[styles.flexChip, filter === 'active' && styles.coloredChip]}
-              textStyle={filter === 'active' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'active' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Aktywne
@@ -237,7 +240,7 @@ const TasksScreen = () => {
               selected={filter === 'completed'}
               onPress={() => setFilter('completed')}
               style={[styles.flexChip, filter === 'completed' && styles.coloredChip]}
-              textStyle={filter === 'completed' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'completed' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Ukończone
@@ -246,7 +249,7 @@ const TasksScreen = () => {
               selected={filter === 'today'}
               onPress={() => setFilter('today')}
               style={[styles.flexChip, filter === 'today' && styles.coloredChip]}
-              textStyle={filter === 'today' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'today' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Na dziś
@@ -255,19 +258,20 @@ const TasksScreen = () => {
               selected={filter === 'high'}
               onPress={() => setFilter('high')}
               style={[styles.flexChip, filter === 'high' && styles.coloredChip]}
-              textStyle={filter === 'high' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'high' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Priorytetowe
             </Chip>
           </View>
         ) : (
+          /* Фільтри для вузьких екранів (горизонтальна прокрутка). */
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <Chip
               selected={filter === 'all'}
               onPress={() => setFilter('all')}
               style={[styles.filterChip, filter === 'all' && styles.coloredChip]}
-              textStyle={filter === 'all' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'all' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Wszystkie
@@ -276,7 +280,7 @@ const TasksScreen = () => {
               selected={filter === 'active'}
               onPress={() => setFilter('active')}
               style={[styles.filterChip, filter === 'active' && styles.coloredChip]}
-              textStyle={filter === 'active' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'active' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Aktywne
@@ -285,7 +289,7 @@ const TasksScreen = () => {
               selected={filter === 'completed'}
               onPress={() => setFilter('completed')}
               style={[styles.filterChip, filter === 'completed' && styles.coloredChip]}
-              textStyle={filter === 'completed' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'completed' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Ukończone
@@ -294,7 +298,7 @@ const TasksScreen = () => {
               selected={filter === 'today'}
               onPress={() => setFilter('today')}
               style={[styles.filterChip, filter === 'today' && styles.coloredChip]}
-              textStyle={filter === 'today' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'today' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Na dziś
@@ -303,7 +307,7 @@ const TasksScreen = () => {
               selected={filter === 'high'}
               onPress={() => setFilter('high')}
               style={[styles.filterChip, filter === 'high' && styles.coloredChip]}
-              textStyle={filter === 'high' ? styles.coloredChipText : {textAlign: 'center'}}
+              textStyle={filter === 'high' ? styles.coloredChipText : { textAlign: 'center' }}
               showSelectedCheck={false}
             >
               Priorytetowe
@@ -312,24 +316,28 @@ const TasksScreen = () => {
         )}
       </View>
 
+      {/* Роздільник, якщо є завдання для відображення */}
       {filteredTasks.length > 0 && <Divider />}
 
+      {/* Список завдань або повідомлення про відсутність завдань */}
       <ScrollView contentContainerStyle={filteredTasks.length === 0 ? { flex: 1 } : { paddingBottom: theme.spacing.s }}>
         {renderGroupedTasks()}
       </ScrollView>
-      
+
+      {/* Кнопка для додавання нового завдання */}
       <FAB
         style={styles.fab}
         icon="plus"
-        onPress={openAddTaskModal}
+        onPress={openAddTaskModal} // Відкриваємо модальне вікно для додавання.
         color="white"
       />
 
+      {/* Модальне вікно для додавання/редагування завдання */}
       <TaskFormModal
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSave={handleSaveTask}
-        initialTask={currentTask}
+        onClose={() => setModalVisible(false)} // Обробник закриття модального вікна.
+        onSave={handleSaveTask} // Обробник збереження завдання.
+        initialTask={currentTask} // Початкові дані для редагування.
       />
     </View>
   );
