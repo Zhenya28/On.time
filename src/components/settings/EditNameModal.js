@@ -3,10 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { Modal, Portal, TextInput, Button, Text } from 'react-native-paper';
 import theme from '../../styles/theme';
 
+// Модальне вікно для редагування імені користувача
 const EditNameModal = ({ visible, onDismiss, onSave, currentName }) => {
+  // Стан для збереження імені та повідомлення про помилку
   const [name, setName] = useState(currentName || '');
   const [error, setError] = useState('');
 
+  // Обробник збереження імені
   const handleSave = () => {
     if (!name.trim()) {
       setError('Imię nie może być puste');
@@ -17,6 +20,7 @@ const EditNameModal = ({ visible, onDismiss, onSave, currentName }) => {
     setError('');
   };
 
+  // Обробник закриття модального вікна
   const handleDismiss = () => {
     setName(currentName || '');
     setError('');
@@ -30,8 +34,9 @@ const EditNameModal = ({ visible, onDismiss, onSave, currentName }) => {
         onDismiss={handleDismiss}
         contentContainerStyle={styles.container}
       >
+        {/* Заголовок модального вікна */}
         <Text style={styles.title}>Zmień imię</Text>
-        
+        {/* Поле для введення імені */}
         <TextInput
           label="Imię"
           value={name}
@@ -41,8 +46,9 @@ const EditNameModal = ({ visible, onDismiss, onSave, currentName }) => {
           autoFocus
           left={<TextInput.Icon icon="account" />}
         />
+        {/* Відображення повідомлення про помилку */}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
+        {/* Кнопки керування модальним вікном */}
         <View style={styles.buttonContainer}>
           <Button
             mode="outlined"
@@ -64,6 +70,7 @@ const EditNameModal = ({ visible, onDismiss, onSave, currentName }) => {
   );
 };
 
+// Стилі для модального вікна
 const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
