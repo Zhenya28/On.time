@@ -11,7 +11,6 @@ import {
   addSeconds
 } from 'date-fns';
 
-// Re-export the functions
 export {
   addMilliseconds,
   addMinutes,
