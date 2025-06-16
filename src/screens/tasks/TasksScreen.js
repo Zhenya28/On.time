@@ -6,7 +6,6 @@ import TaskItem from '../../components/tasks/TaskItem';
 import TaskFormModal from '../../components/tasks/TaskFormModal';
 import theme from '../../styles/theme';
 
-// Ekran zadań
 const TasksScreen = () => {
   // Хуки та стани
   const { tasks, loading, addTask, updateTask, deleteTask, toggleTaskCompletion } = useTask();
@@ -173,7 +172,7 @@ const TasksScreen = () => {
     
     return (
       <View style={styles.emptyContainer}>
-        {/* Obrazek w formacie JPG */}
+      
         <Image 
   source={require('../../../assets/images/empty-tasks.png')} 
   style={styles.emptyImage}
