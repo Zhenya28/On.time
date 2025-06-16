@@ -13,7 +13,6 @@ export const TaskProvider = ({ children }) => {
   const { user } = useAuth();
   const notification = useNotification();
 
-
   useEffect(() => {
     const loadTasks = async () => {
       if (!user) {
@@ -41,6 +40,7 @@ export const TaskProvider = ({ children }) => {
 
     loadTasks();
   }, [user?.email]);
+
   useEffect(() => {
     const scheduleAllReminders = async () => {
       if (!user || !notification) return;
@@ -71,44 +71,6 @@ export const TaskProvider = ({ children }) => {
     persistTasks();
   }, [tasks, user?.email]);
 
-  const generateExampleTasks = () => {
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
-    
-    return [
-      {
-        id: '1',
-        title: 'Witaj w aplikacji On.Time!',
-        description: 'Dziękujemy za rejestrację. To jest Twoje pierwsze zadanie.',
-        priority: 'medium',
-        dueDate: today.toISOString(),
-        completed: false,
-        createdAt: new Date().toISOString(),
-        reminder: false,
-      },
-      {
-        id: '2',
-        title: 'Sprawdź widok kalendarza',
-        description: 'Możesz przeglądać swoje zadania w widoku kalendarza.',
-        priority: 'low',
-        dueDate: tomorrow.toISOString(),
-        completed: false,
-        createdAt: new Date().toISOString(),
-        reminder: false,
-      },
-      {
-        id: '3',
-        title: 'Wypróbuj Timer Pomodoro',
-        description: 'Użyj techniki Pomodoro, aby zwiększyć swoją produktywność.',
-        priority: 'high',
-        dueDate: today.toISOString(),
-        completed: false,
-        createdAt: new Date().toISOString(),
-        reminder: false,
-      },
-    ];
-  };
   const saveTasks = async (updatedTasks) => {
     if (!user) return;
     
@@ -119,6 +81,7 @@ export const TaskProvider = ({ children }) => {
       throw error;
     }
   };
+
   const addTask = async (newTask) => {
     try {
       const taskWithId = {
@@ -141,6 +104,7 @@ export const TaskProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
+
   const updateTask = async (taskId, updatedData) => {
     try {
       const updatedTasks = tasks.map(task => 
@@ -163,6 +127,7 @@ export const TaskProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
+
   const deleteTask = async (taskId) => {
     try {
       const updatedTasks = tasks.filter(task => task.id !== taskId);
@@ -177,6 +142,7 @@ export const TaskProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
+
   const toggleTaskCompletion = async (taskId) => {
     try {
       const updatedTasks = tasks.map(task => 
@@ -198,6 +164,7 @@ export const TaskProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
+
   const getTasksByDate = (date) => {
     if (!date) return [];
     
@@ -211,10 +178,12 @@ export const TaskProvider = ({ children }) => {
       return taskDate === dateString;
     });
   };
+
   const getTasksByPriority = (priority) => {
     if (!priority) return tasks;
     return tasks.filter(task => task.priority === priority);
   };
+
   const clearAllTasks = async () => {
     if (!user) return { success: false, error: 'User is not logged in' };
     
