@@ -16,7 +16,6 @@ const [error, setError] = useState('');
 const [snackbarVisible, setSnackbarVisible] = useState(false);
 const [enableReminder, setEnableReminder] = useState(false);
 
-// Wypełniamy formularz przy edytowaniu istniejącego zadania
 useEffect(() => {
 if (initialTask) {
 setTitle(initialTask.title || '');
@@ -27,7 +26,6 @@ if (initialTask.dueDate) {
 const dateObj = new Date(initialTask.dueDate);
 setDueDate(dateObj);
 
-// Sprawdzamy, czy zadanie ma ustawioną godzinę
 if (dateObj.getHours() !== 0 || dateObj.getMinutes() !== 0) {
 setDueTime(dateObj);
 setEnableReminder(initialTask.reminder || false);
@@ -62,16 +60,13 @@ return;
 let finalDueDate = null;
 
 if (dueDate) {
-// Tworzymy nową datę, aby nie modyfikować oryginalnej
 finalDueDate = new Date(dueDate);
 
-// Jeśli wybrano godzinę, ustawiamy ją
 if (dueTime) {
 finalDueDate.setHours(dueTime.getHours());
 finalDueDate.setMinutes(dueTime.getMinutes());
 finalDueDate.setSeconds(0);
 } else {
-// Jeśli nie wybrano godziny, ustawiamy 00:00
 finalDueDate.setHours(0);
 finalDueDate.setMinutes(0);
 finalDueDate.setSeconds(0);
@@ -95,13 +90,11 @@ resetForm();
 onClose();
 };
 
-// Funkcja do pokazania pickera daty
 const showDatepicker = () => {
 Keyboard.dismiss();
 setShowDatePicker(true);
 };
 
-// Funkcja do pokazania pickera czasu
 const showTimepicker = () => {
 if (!dueDate) {
 Alert.alert("Uwaga", "Najpierw wybierz datę zadania");
@@ -112,7 +105,6 @@ Keyboard.dismiss();
 setShowTimePicker(true);
 };
 
-// Obsługa zmiany daty
 const onChangeDate = (event, selectedDate) => {
 setShowDatePicker(false);
 
@@ -121,13 +113,11 @@ setDueDate(selectedDate);
 }
 };
 
-// Obsługa zmiany czasu
 const onChangeTime = (event, selectedTime) => {
 setShowTimePicker(false);
 
 if (selectedTime) {
 const newTime = new Date(selectedTime);
-// Keep only time part from the selected time
 if (dueDate) {
 const updatedTime = new Date(dueDate);
 updatedTime.setHours(newTime.getHours());
@@ -151,7 +141,6 @@ setDueTime(null);
 setEnableReminder(false);
 };
 
-// Formatujemy datę dla wyświetlenia
 const formatDate = (date) => {
 if (!date) return '';
 
@@ -162,7 +151,6 @@ const year = date.getFullYear();
 return `${day}.${month}.${year}`;
 };
 
-// Formatujemy godzinę dla wyświetlenia
 const formatTime = (date) => {
 if (!date) return '';
 
