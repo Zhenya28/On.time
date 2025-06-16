@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { Text, FAB, Surface, ActivityIndicator } from 'react-native-paper';
 import { Calendar } from 'react-native-calendars';
-import { useTask } from '../../context/TaskContext';
-import TaskItem from '../../components/tasks/TaskItem';
-import TaskFormModal from '../../components/tasks/TaskFormModal';
-import theme from '../../styles/theme';
+import { useTask } from '../../context/TaskContext'; // Імпортуємо хук для роботи з завданнями.
+import TaskItem from '../../components/tasks/TaskItem'; // Компонент для відображення одного завдання.
+import TaskFormModal from '../../components/tasks/TaskFormModal'; // Модальне вікно для додавання/редагування завдань.
+import theme from '../../styles/theme'; // Імпортуємо тему оформлення.
 
 const CalendarScreen = () => {
-  const { tasks, loading, getTasksByDate, addTask, updateTask, deleteTask, toggleTaskCompletion } = useTask();
-  const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
-  const [markedDates, setMarkedDates] = useState({});
-  const [dailyTasks, setDailyTasks] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [currentTask, setCurrentTask] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const { tasks, loading, getTasksByDate, addTask, updateTask, deleteTask, toggleTaskCompletion } = useTask(); // Отримуємо функції та дані з TaskContext.
+  const [selectedDate, setSelectedDate] = useState(formatDate(new Date())); // Стан для обраної дати в календарі.
+  const [markedDates, setMarkedDates] = useState({}); // Стан для позначених дат в календарі (з завданнями).
+  const [dailyTasks, setDailyTasks] = useState([]); // Стан для завдань на обрану дату.
+  const [modalVisible, setModalVisible] = useState(false); // Стан для видимості модального вікна.
+  const [currentTask, setCurrentTask] = useState(null); // Стан для поточного завдання, яке редагується.
+  const [refreshKey, setRefreshKey] = useState(0); // Ключ для примусового оновлення списку завдань.
 
-  // Функція для форматування дати у формат YYYY-MM-DD
+  // Форматує об'єкт Date в рядок у форматі РРРР-ММ-ДД.
   function formatDate(date) {
     const d = new Date(date);
     let month = '' + (d.getMonth() + 1);
@@ -29,49 +29,44 @@ const CalendarScreen = () => {
     return [year, month, day].join('-');
   }
 
-  // Функція для форматування дати у читабельний формат
+  // Форматує рядок дати у читабельний формат (наприклад, "понеділок, 1 січня 2024").
   function formatDisplayDate(dateString) {
     const date = new Date(dateString);
     const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-    
-    // Форматуємо дату у польській локалізації
-    return date.toLocaleDateString('pl-PL', options);
+    return date.toLocaleDateString('pl-PL', options); // Форматуємо дату для польської локалі.
   }
 
-  // Підготовка даних для календаря
+  // Обробляє зміни в стані завдань, обраної дати та завантаження для оновлення UI.
   useEffect(() => {
-    if (loading) return;
+    if (loading) return; // Якщо дані ще завантажуються, нічого не робимо.
 
-    const marks = {};
-    
-    // Додаємо поточну дату
-    marks[selectedDate] = { selected: true, selectedColor: theme.colors.primary };
-    
-    // Додаємо дати з завданнями
+    const marks = {}; // Об'єкт для позначення дат в календарі.
+    marks[selectedDate] = { selected: true, selectedColor: theme.colors.primary }; // Позначаємо обрану дату.
+
     tasks.forEach(task => {
       if (task.dueDate) {
-        const dateStr = task.dueDate.split('T')[0];
-        
+        const dateStr = task.dueDate.split('T')[0]; // Отримуємо дату завдання у форматі РРРР-ММ-ДД.
+
         if (dateStr === selectedDate) {
-          // Якщо це вибрана дата, зберігаємо формат вибраної дати
+          // Якщо дата завдання співпадає з обраною датою.
           marks[dateStr] = {
             ...marks[dateStr],
             selected: true,
             selectedColor: theme.colors.primary,
             marked: true,
-            dotColor: 'white'
+            dotColor: 'white' // Колір точки для позначеної дати.
           };
         } else {
-          // Звичайна дата з завданням - вибираємо колір в залежності від пріоритету першого завдання на цю дату
+          // Якщо дата завдання не співпадає з обраною датою.
           const tasksForDate = tasks.filter(t => t.dueDate && t.dueDate.split('T')[0] === dateStr);
           let dotColor = theme.colors.primary;
-          
-          // Якщо є невиконане завдання з високим пріоритетом
+
+          // Визначаємо колір точки в залежності від пріоритету завдання.
           const highPriorityTask = tasksForDate.find(t => t.priority === 'high' && !t.completed);
           if (highPriorityTask) {
             dotColor = theme.colors.error;
           }
-          
+
           marks[dateStr] = {
             ...marks[dateStr],
             marked: true,
@@ -80,74 +75,73 @@ const CalendarScreen = () => {
         }
       }
     });
-    
-    setMarkedDates(marks);
 
-    // Оновлюємо список завдань на вибрану дату
+    setMarkedDates(marks); // Оновлюємо позначені дати в календарі.
+
+    // Фільтруємо завдання для обраної дати.
     const tasksForSelectedDate = tasks.filter(task => {
       if (!task.dueDate) return false;
       return task.dueDate.split('T')[0] === selectedDate;
     });
-    
-    // Сортуємо: спочатку невиконані, потім за пріоритетом
+
+    // Сортуємо завдання: спочатку невиконані, потім за пріоритетом.
     tasksForSelectedDate.sort((a, b) => {
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
       }
-      
+
       const priorityOrder = { high: 0, medium: 1, low: 2 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
-    
-    setDailyTasks(tasksForSelectedDate);
+
+    setDailyTasks(tasksForSelectedDate); // Оновлюємо список завдань для обраної дати.
   }, [tasks, selectedDate, loading, refreshKey]);
 
-  // Обробка збереження завдання
+  // Обробляє збереження (створення або оновлення) завдання.
   const handleSaveTask = async (taskData) => {
-    // Додаємо дату, якщо не вказана
     if (!taskData.dueDate) {
-      taskData.dueDate = new Date(selectedDate).toISOString();
+      taskData.dueDate = new Date(selectedDate).toISOString(); // Якщо дата не вказана, використовуємо обрану дату.
     }
-    
+
     if (currentTask) {
-      await updateTask(currentTask.id, taskData);
+      await updateTask(currentTask.id, taskData); // Оновлюємо існуюче завдання.
     } else {
-      await addTask(taskData);
+      await addTask(taskData); // Додаємо нове завдання.
     }
-    
-    setModalVisible(false);
-    setRefreshKey(prevKey => prevKey + 1);
+
+    setModalVisible(false); // Закриваємо модальне вікно.
+    setRefreshKey(prevKey => prevKey + 1); // Примусово оновлюємо список завдань.
   };
 
-  // Обробка видалення завдання
+  // Обробляє видалення завдання.
   const handleDeleteTask = async (taskId) => {
     await deleteTask(taskId);
-    setRefreshKey(prevKey => prevKey + 1);
+    setRefreshKey(prevKey => prevKey + 1); // Примусово оновлюємо список завдань.
   };
 
-  // Обробка позначення завдання як виконане/невиконане
+  // Обробляє перемикання статусу виконання завдання.
   const handleToggleCompletion = async (taskId) => {
     await toggleTaskCompletion(taskId);
-    setRefreshKey(prevKey => prevKey + 1);
+    setRefreshKey(prevKey => prevKey + 1); // Примусово оновлюємо список завдань.
   };
 
-  // Відображення кольору пріоритету
+  // Визначає колір для відображення пріоритету завдання.
   const getPriorityColor = (priority, completed) => {
-    if (completed) return theme.colors.disabled;
-    
+    if (completed) return theme.colors.disabled; // Сірий колір для виконаних завдань.
+
     switch (priority) {
       case 'high':
-        return theme.colors.error;
+        return theme.colors.error;      // Червоний для високого пріоритету.
       case 'medium':
-        return theme.colors.warning;
+        return theme.colors.warning;    // Жовтий для середнього пріоритету.
       case 'low':
-        return theme.colors.success;
+        return theme.colors.success;    // Зелений для низького пріоритету.
       default:
-        return theme.colors.accent;
+        return theme.colors.accent;     // Акцентний колір для інших випадків.
     }
   };
 
-  // Helper to group tasks by priority
+  // Групує завдання за пріоритетом.
   const groupTasksByPriority = (tasks) => {
     const groups = {
       high: [],
@@ -162,7 +156,7 @@ const CalendarScreen = () => {
     return groups;
   };
 
-  // Section header labels and colors
+  // Мітки та кольори для секцій пріоритетів.
   const PRIORITY_LABELS = {
     high: 'Wysoki priorytet',
     medium: 'Średni priorytet',
@@ -174,7 +168,7 @@ const CalendarScreen = () => {
     low: '#72BF78',
   };
 
-  // Render grouped tasks with section headers
+  // Відображає згруповані завдання з заголовками секцій.
   const renderGroupedTasks = () => {
     const groups = groupTasksByPriority(dailyTasks);
     const sections = [];
@@ -199,10 +193,10 @@ const CalendarScreen = () => {
         );
       }
     });
-    return sections.length > 0 ? sections : renderEmptyList();
+    return sections.length > 0 ? sections : renderEmptyList(); // Якщо немає завдань, відображаємо повідомлення.
   };
 
-  // Рендеринг елемента списку завдань
+  // Відображає один елемент завдання у списку.
   const renderTaskItem = ({ item }) => (
     <TaskItem
       task={item}
@@ -215,7 +209,7 @@ const CalendarScreen = () => {
     />
   );
 
-  // Відображення пустого списку
+  // Відображає повідомлення, якщо на обрану дату немає завдань.
   const renderEmptyList = () => {
     if (loading) {
       return (
@@ -225,17 +219,17 @@ const CalendarScreen = () => {
         </View>
       );
     }
-    
-    const formattedDate = formatDisplayDate(selectedDate);
-    
+
+    const formattedDate = formatDisplayDate(selectedDate); // Форматуємо обрану дату.
+
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyDateText}>{formattedDate}</Text>
         <Text style={styles.emptyText}>
           Brak zadań na ten dzień
         </Text>
-        <TouchableOpacity 
-          style={styles.addTaskButton} 
+        <TouchableOpacity
+          style={styles.addTaskButton}
           onPress={() => {
             setCurrentTask(null);
             setModalVisible(true);
@@ -247,22 +241,24 @@ const CalendarScreen = () => {
     );
   };
 
-  // Обробка додавання нового завдання
+  // Обробляє додавання нового завдання.
   const addNewTask = () => {
-    setCurrentTask(null);
-    setModalVisible(true);
+    setCurrentTask(null); // Скидаємо поточне завдання.
+    setModalVisible(true); // Показуємо модальне вікно.
   };
 
   return (
+    // Головний контейнер екрану.
     <View style={styles.container}>
+      {/* Контейнер календаря. */}
       <Surface style={styles.calendarContainer}>
         <Calendar
-          current={selectedDate}
-          onDayPress={(day) => setSelectedDate(day.dateString)}
-          markedDates={markedDates}
-          hideExtraDays={true}
-          firstDay={1}
-          enableSwipeMonths={true}
+          current={selectedDate} // Поточна обрана дата.
+          onDayPress={(day) => setSelectedDate(day.dateString)} // Обробник натискання на день.
+          markedDates={markedDates} // Obiekt z zaznaczonymi datami.
+          hideExtraDays={true} // Ukrywa dni z poprzedniego i następnego miesiąca.
+          firstDay={1} // Pierwszy dzień tygodnia to poniedziałek.
+          enableSwipeMonths={true} // Umożliwia przesuwanie miesięcy.
           theme={{
             calendarBackground: theme.colors.surface,
             textSectionTitleColor: theme.colors.text,
@@ -281,18 +277,21 @@ const CalendarScreen = () => {
           }}
         />
       </Surface>
-      
+
+      {/* Контейнер для списку завдань. */}
       <ScrollView contentContainerStyle={dailyTasks.length === 0 ? styles.emptyListContainer : styles.listContainer}>
         {renderGroupedTasks()}
       </ScrollView>
-      
+
+      {/* Кнопка для додавання нового завдання. */}
       <FAB
         style={styles.fab}
         icon="plus"
         color="white"
         onPress={addNewTask}
       />
-      
+
+      {/* Модальне вікно для додавання/редагування завдання. */}
       <TaskFormModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
