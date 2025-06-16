@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
 import { useNotification } from './NotificationContext';
 
-// Kontekst dla zarządzania zadaniami
 const TaskContext = createContext();
 
 export const useTask = () => useContext(TaskContext);
@@ -14,7 +13,7 @@ export const TaskProvider = ({ children }) => {
   const { user } = useAuth();
   const notification = useNotification();
 
-  // Ładowanie zadań gdy użytkownik się zmienia
+
   useEffect(() => {
     const loadTasks = async () => {
       if (!user) {
@@ -25,13 +24,11 @@ export const TaskProvider = ({ children }) => {
 
       try {
         setLoading(true);
-        // Używamy e-maila użytkownika jako klucza, ponieważ jest on bardziej stabilny niż uid między sesjami
         const tasksJSON = await AsyncStorage.getItem(`@tasks_${user.email}`);
         if (tasksJSON) {
           const loadedTasks = JSON.parse(tasksJSON);
           setTasks(loadedTasks);
         } else {
-          // Start with empty tasks for new users
           setTasks([]);
         }
       } catch (error) {
@@ -43,9 +40,7 @@ export const TaskProvider = ({ children }) => {
     };
 
     loadTasks();
-  }, [user?.email]); // Przeładuj tylko, gdy e-mail użytkownika się zmieni
-
-  // Zaplanuj przypomnienia dla wszystkich zadań z przypomnieniami
+  }, [user?.email]);
   useEffect(() => {
     const scheduleAllReminders = async () => {
       if (!user || !notification) return;
@@ -62,7 +57,6 @@ export const TaskProvider = ({ children }) => {
     }
   }, [tasks, loading, user, notification]);
 
-  // Zapisz zadania przy każdej zmianie
   useEffect(() => {
     const persistTasks = async () => {
       if (user && tasks) {
@@ -77,7 +71,6 @@ export const TaskProvider = ({ children }) => {
     persistTasks();
   }, [tasks, user?.email]);
 
-  // Tworzenie przykładowych zadań
   const generateExampleTasks = () => {
     const today = new Date();
     const tomorrow = new Date();
@@ -116,8 +109,6 @@ export const TaskProvider = ({ children }) => {
       },
     ];
   };
-
-  // Zapisywanie zadań
   const saveTasks = async (updatedTasks) => {
     if (!user) return;
     
@@ -128,8 +119,6 @@ export const TaskProvider = ({ children }) => {
       throw error;
     }
   };
-
-  // Dodawanie nowego zadania
   const addTask = async (newTask) => {
     try {
       const taskWithId = {
@@ -142,7 +131,6 @@ export const TaskProvider = ({ children }) => {
       const updatedTasks = [...tasks, taskWithId];
       setTasks(updatedTasks);
 
-      // Jeśli zadanie ma przypomnienie, zaplanuj je
       if (taskWithId.reminder && taskWithId.dueDate && notification) {
         await notification.scheduleTaskReminder(taskWithId);
       }
@@ -153,8 +141,6 @@ export const TaskProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
-
-  // Aktualizacja zadania
   const updateTask = async (taskId, updatedData) => {
     try {
       const updatedTasks = tasks.map(task => 
@@ -163,8 +149,6 @@ export const TaskProvider = ({ children }) => {
       
       setTasks(updatedTasks);
       const updatedTask = updatedTasks.find(task => task.id === taskId);
-
-      // Zaplanuj nowe przypomnienie lub anuluj istniejące
       if (notification) {
         if (updatedTask.reminder && updatedTask.dueDate) {
           await notification.scheduleTaskReminder(updatedTask);
@@ -179,14 +163,10 @@ export const TaskProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
-
-  // Usuwanie zadania
   const deleteTask = async (taskId) => {
     try {
       const updatedTasks = tasks.filter(task => task.id !== taskId);
       setTasks(updatedTasks);
-
-      // Anuluj przypomnienie dla usuniętego zadania
       if (notification) {
         await notification.cancelTaskReminder(taskId);
       }
@@ -197,8 +177,6 @@ export const TaskProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
-
-  // Przełączanie stanu wykonania zadania
   const toggleTaskCompletion = async (taskId) => {
     try {
       const updatedTasks = tasks.map(task => 
@@ -210,7 +188,6 @@ export const TaskProvider = ({ children }) => {
       setTasks(updatedTasks);
       const updatedTask = updatedTasks.find(task => task.id === taskId);
 
-      // Jeśli zadanie zostało oznaczone jako wykonane, anuluj przypomnienie
       if (updatedTask.completed && notification) {
         await notification.cancelTaskReminder(taskId);
       }
@@ -221,12 +198,9 @@ export const TaskProvider = ({ children }) => {
       return { success: false, error: error.message };
     }
   };
-
-  // Pobieranie zadań na określoną datę
   const getTasksByDate = (date) => {
     if (!date) return [];
     
-    // Konwertuj datę na ciąg YYYY-MM-DD
     const dateString = typeof date === 'string' 
       ? new Date(date).toISOString().split('T')[0] 
       : date.toISOString().split('T')[0];
@@ -237,21 +211,16 @@ export const TaskProvider = ({ children }) => {
       return taskDate === dateString;
     });
   };
-
-  // Pobieranie zadań według priorytetu
   const getTasksByPriority = (priority) => {
     if (!priority) return tasks;
     return tasks.filter(task => task.priority === priority);
   };
-
-  // Usuwanie wszystkich zadań użytkownika
   const clearAllTasks = async () => {
     if (!user) return { success: false, error: 'User is not logged in' };
     
     try {
       setTasks([]);
 
-      // Anuluj wszystkie przypomnienia
       if (notification) {
         await notification.cancelAllReminders();
       }
