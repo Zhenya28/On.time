@@ -13,6 +13,7 @@ export const TaskProvider = ({ children }) => {
   const { user } = useAuth();
   const notification = useNotification();
 
+  // Завантажуємо завдання з AsyncStorage при зміні користувача.
   useEffect(() => {
     const loadTasks = async () => {
       if (!user) {
@@ -41,6 +42,7 @@ export const TaskProvider = ({ children }) => {
     loadTasks();
   }, [user?.email]);
 
+  // Плануємо нагадування для всіх завдань з нагадуваннями після завантаження.
   useEffect(() => {
     const scheduleAllReminders = async () => {
       if (!user || !notification) return;
@@ -57,6 +59,7 @@ export const TaskProvider = ({ children }) => {
     }
   }, [tasks, loading, user, notification]);
 
+  // Зберігаємо завдання в AsyncStorage щоразу, коли список завдань змінюється.
   useEffect(() => {
     const persistTasks = async () => {
       if (user && tasks) {
@@ -71,6 +74,7 @@ export const TaskProvider = ({ children }) => {
     persistTasks();
   }, [tasks, user?.email]);
 
+  // Зберігає оновлений список завдань в AsyncStorage.
   const saveTasks = async (updatedTasks) => {
     if (!user) return;
     
@@ -82,11 +86,12 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  // Додає нове завдання до списку та планує нагадування, якщо потрібно.
   const addTask = async (newTask) => {
     try {
       const taskWithId = {
         ...newTask,
-        id: Date.now().toString(),
+        id: Date.now().toString(), // Генеруємо унікальний ID для нового завдання.
         createdAt: new Date().toISOString(),
         completed: false,
       };
@@ -105,6 +110,7 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  // Оновлює існуюче завдання та оновлює/скасовує його нагадування.
   const updateTask = async (taskId, updatedData) => {
     try {
       const updatedTasks = tasks.map(task => 
@@ -128,6 +134,7 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  // Видаляє завдання зі списку та скасовує пов'язане нагадування.
   const deleteTask = async (taskId) => {
     try {
       const updatedTasks = tasks.filter(task => task.id !== taskId);
@@ -143,6 +150,7 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  // Перемикає статус завершення завдання та скасовує нагадування, якщо завдання завершено.
   const toggleTaskCompletion = async (taskId) => {
     try {
       const updatedTasks = tasks.map(task => 
@@ -165,6 +173,7 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  // Фільтрує завдання за вказаною датою виконання.
   const getTasksByDate = (date) => {
     if (!date) return [];
     
@@ -179,11 +188,13 @@ export const TaskProvider = ({ children }) => {
     });
   };
 
+  // Фільтрує завдання за вказаним пріоритетом.
   const getTasksByPriority = (priority) => {
     if (!priority) return tasks;
     return tasks.filter(task => task.priority === priority);
   };
 
+  // Видаляє всі завдання та скасовує всі нагадування.
   const clearAllTasks = async () => {
     if (!user) return { success: false, error: 'User is not logged in' };
     
@@ -202,6 +213,7 @@ export const TaskProvider = ({ children }) => {
   };
 
   return (
+    // Надаємо доступ до стану завдань та функцій для керування ними.
     <TaskContext.Provider
       value={{
         tasks,
