@@ -2,22 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Modal, TouchableWithoutFeedback, Keyboard, ScrollView, Platform, TouchableOpacity, Alert } from 'react-native';
 import { TextInput, Button, Text, IconButton, Snackbar, Surface, Switch } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import theme from '../../styles/theme';
+import theme from '../../styles/theme'; // Імпорт теми для стилізації
 
+// Компонент модальної форми для додавання/редагування завдань
 const TaskFormModal = ({ visible, onClose, onSave, initialTask = null }) => {
-const [title, setTitle] = useState('');
-const [description, setDescription] = useState('');
-const [priority, setPriority] = useState('medium');
-const [dueDate, setDueDate] = useState(null);
-const [dueTime, setDueTime] = useState(null);
-const [showDatePicker, setShowDatePicker] = useState(false);
-const [showTimePicker, setShowTimePicker] = useState(false);
-const [error, setError] = useState('');
-const [snackbarVisible, setSnackbarVisible] = useState(false);
-const [enableReminder, setEnableReminder] = useState(false);
+// Стан для полів форми
+const [title, setTitle] = useState(''); // Стан для заголовка завдання
+const [description, setDescription] = useState(''); // Стан для опису завдання
+const [priority, setPriority] = useState('medium'); // Стан для пріоритету завдання (за замовчуванням "середній")
+const [dueDate, setDueDate] = useState(null); // Стан для дати виконання
+const [dueTime, setDueTime] = useState(null); // Стан для часу виконання
+const [showDatePicker, setShowDatePicker] = useState(false); // Стан для видимості вибору дати
+const [showTimePicker, setShowTimePicker] = useState(false); // Стан для видимості вибору часу
+const [error, setError] = useState(''); // Стан для повідомлення про помилку
+const [snackbarVisible, setSnackbarVisible] = useState(false); // Стан для видимості Snackbar
+const [enableReminder, setEnableReminder] = useState(false); // Стан для ввімкнення нагадування
 
+// Ефект, який спрацьовує при зміні initialTask або visible
 useEffect(() => {
 if (initialTask) {
+// Якщо передано initialTask (режим редагування), заповнюємо форму даними завдання
 setTitle(initialTask.title || '');
 setDescription(initialTask.description || '');
 setPriority(initialTask.priority || 'medium');
@@ -26,6 +30,7 @@ if (initialTask.dueDate) {
 const dateObj = new Date(initialTask.dueDate);
 setDueDate(dateObj);
 
+// Якщо є час у даті, встановлюємо його та вмикаємо нагадування
 if (dateObj.getHours() !== 0 || dateObj.getMinutes() !== 0) {
 setDueTime(dateObj);
 setEnableReminder(initialTask.reminder || false);
@@ -36,10 +41,12 @@ setDueTime(null);
 setEnableReminder(false);
 }
 } else {
+// Якщо initialTask відсутній (режим додавання нового завдання), скидаємо форму
 resetForm();
 }
 }, [initialTask, visible]);
 
+// Функція для скидання форми до початкового стану
 const resetForm = () => {
 setTitle('');
 setDescription('');
@@ -50,75 +57,87 @@ setError('');
 setEnableReminder(false);
 };
 
+// Обробник збереження завдання
 const handleSave = () => {
 if (!title.trim()) {
-setError('Tytuł zadania jest wymagany');
-setSnackbarVisible(true);
+// Перевірка на наявність заголовка
+setError('Tytuł zadania jest wymagany'); // Встановлення повідомлення про помилку
+setSnackbarVisible(true); // Показуємо Snackbar
 return;
 }
 
 let finalDueDate = null;
 
 if (dueDate) {
+// Створення остаточної дати виконання
 finalDueDate = new Date(dueDate);
 
 if (dueTime) {
+// Якщо є час, встановлюємо його
 finalDueDate.setHours(dueTime.getHours());
 finalDueDate.setMinutes(dueTime.getMinutes());
 finalDueDate.setSeconds(0);
 } else {
+// Якщо часу немає, встановлюємо на початок дня
 finalDueDate.setHours(0);
 finalDueDate.setMinutes(0);
 finalDueDate.setSeconds(0);
 }
 }
 
+// Формування об'єкта даних завдання
 const taskData = {
 title: title.trim(),
 description: description.trim(),
 priority,
-dueDate: finalDueDate ? finalDueDate.toISOString() : null,
-reminder: dueTime ? enableReminder : false,
+dueDate: finalDueDate ? finalDueDate.toISOString() : null, // Конвертація дати в ISO рядок
+reminder: dueTime ? enableReminder : false, // Ввімкнення нагадування лише якщо є час
 };
 
 if (initialTask) {
+// Якщо це редагування, додаємо ID завдання
 taskData.id = initialTask.id;
 }
 
-onSave(taskData);
-resetForm();
-onClose();
+onSave(taskData); // Виклик функції збереження, переданої через пропси
+resetForm(); // Скидання форми
+onClose(); // Закриття модального вікна
 };
 
+// Функція для показу вікна вибору дати
 const showDatepicker = () => {
-Keyboard.dismiss();
+Keyboard.dismiss(); // Приховуємо клавіатуру
 setShowDatePicker(true);
 };
 
+// Функція для показу вікна вибору часу
 const showTimepicker = () => {
 if (!dueDate) {
-Alert.alert("Uwaga", "Najpierw wybierz datę zadania");
+Alert.alert("Uwaga", "Najpierw wybierz datę zadania"); // Попередження, якщо дата не вибрана
 return;
 }
 
-Keyboard.dismiss();
+Keyboard.dismiss(); // Приховуємо клавіатуру
 setShowTimePicker(true);
 };
 
+// Обробник зміни дати
 const onChangeDate = (event, selectedDate) => {
-setShowDatePicker(false);
+setShowDatePicker(false); // Приховуємо вибір дати
 
 if (selectedDate) {
-setDueDate(selectedDate);
+setDueDate(selectedDate); // Встановлюємо вибрану дату
 }
 };
 
+// Обробник зміни часу
 const onChangeTime = (event, selectedTime) => {
-setShowTimePicker(false);
+setShowTimePicker(false); // Приховуємо вибір часу
 
 if (selectedTime) {
 const newTime = new Date(selectedTime);
 if (dueDate) {
+// Оновлюємо час, зберігаючи дату
 const updatedTime = new Date(dueDate);
 updatedTime.setHours(newTime.getHours());
 updatedTime.setMinutes(newTime.getMinutes());
@@ -126,21 +145,24 @@ setDueTime(updatedTime);
 } else {
 setDueTime(newTime);
 }
-setEnableReminder(true);
+setEnableReminder(true); // Вмикаємо нагадування при виборі часу
 }
 };
 
+// Функція для очищення дати
 const clearDate = () => {
 setDueDate(null);
 setDueTime(null);
 setEnableReminder(false);
 };
 
+// Функція для очищення часу
 const clearTime = () => {
 setDueTime(null);
 setEnableReminder(false);
 };
 
+// Функція форматування дати для відображення
 const formatDate = (date) => {
 if (!date) return '';
 
@@ -151,6 +173,7 @@ const year = date.getFullYear();
 return `${day}.${month}.${year}`;
 };
 
+// Функція форматування часу для відображення
 const formatTime = (date) => {
 if (!date) return '';
 
@@ -162,199 +185,214 @@ return `${hours}:${minutes}`;
 
 return (
 <Modal
-visible={visible}
-animationType="slide"
-transparent={true}
-onRequestClose={onClose}
+visible={visible} // Видимість модального вікна
+animationType="slide" // Тип анімації
+transparent={true} // Прозорий фон
+onRequestClose={onClose} // Обробник закриття модального вікна
 >
 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+{/* Область, яка приховує клавіатуру при торканні */}
 <View style={styles.modalOverlay}>
+{/* Затемнення фону */}
 <Surface style={styles.modalContainer}>
+{/* Контейнер модального вікна */}
 <View style={styles.header}>
-  <Text style={styles.title}>
-    {initialTask ? 'Edytuj zadanie' : 'Dodaj nowe zadanie'}
-  </Text>
+{/* Заголовок модального вікна */}
+<Text style={styles.title}>
+{initialTask ? 'Edytuj zadanie' : 'Dodaj nowe zadanie'} {/* Зміна заголовка залежно від режиму */}
+</Text>
 </View>
 
 <View style={{ flex: 1 }}>
 <ScrollView
-  style={styles.formContainer}
-  contentContainerStyle={{ paddingBottom: 16 }}
-  keyboardShouldPersistTaps="handled"
-  showsVerticalScrollIndicator={false}
+style={styles.formContainer}
+contentContainerStyle={{ paddingBottom: 16 }}
+keyboardShouldPersistTaps="handled"
+showsVerticalScrollIndicator={false}
 >
+{/* Поле для введення заголовка завдання */}
 <TextInput
-  label="Tytuł zadania"
-  value={title}
-  onChangeText={setTitle}
-  style={styles.input}
-  autoCapitalize="sentences"
-  error={!!error}
-  mode="outlined"
-  activeOutlineColor={theme.colors.primary}
-  outlineColor="#E0E0E0"
-  theme={{ roundness: 12 }}
+label="Tytuł zadania"
+value={title}
+onChangeText={setTitle}
+style={styles.input}
+autoCapitalize="sentences"
+error={!!error} // Показ помилки, якщо є
+mode="outlined"
+activeOutlineColor={theme.colors.primary}
+outlineColor="#E0E0E0"
+theme={{ roundness: 12 }}
 />
 
+{/* Поле для введення опису завдання */}
 <TextInput
-  label="Opis (opcjonalnie)"
-  value={description}
-  onChangeText={setDescription}
-  style={styles.input}
-  multiline
-  numberOfLines={3}
-  mode="outlined"
-  activeOutlineColor={theme.colors.primary}
-  outlineColor="#E0E0E0"
-  theme={{ roundness: 12 }}
+label="Opis (opcjonalnie)"
+value={description}
+onChangeText={setDescription}
+style={styles.input}
+multiline
+numberOfLines={3}
+mode="outlined"
+activeOutlineColor={theme.colors.primary}
+outlineColor="#E0E0E0"
+theme={{ roundness: 12 }}
 />
 
 <Text style={styles.labelText}>Priorytet</Text>
 <View style={styles.priorityContainer}>
-  <TouchableOpacity
-    style={[
-      styles.priorityButton,
-      priority === 'high' && styles.priorityButtonActive,
-      priority === 'high' && { backgroundColor: '#FF486A', borderColor: '#FF486A' },
-      priority !== 'high' && { borderColor: '#FF486A' }
-    ]}
-    onPress={() => setPriority('high')}
-  >
-    <Text style={[
-      styles.priorityText,
-      priority === 'high' && { color: 'white' },
-      priority !== 'high' && { color: '#FF486A' }
-    ]}>Wysoki</Text>
-  </TouchableOpacity>
-  
-  <TouchableOpacity
-    style={[
-      styles.priorityButton,
-      priority === 'medium' && styles.priorityButtonActive,
-      priority === 'medium' && { backgroundColor: '#FBA518', borderColor: '#FBA518' },
-      priority !== 'medium' && { borderColor: '#FBA518' }
-    ]}
-    onPress={() => setPriority('medium')}
-  >
-    <Text style={[
-      styles.priorityText,
-      priority === 'medium' && { color: 'white' },
-      priority !== 'medium' && { color: '#FBA518' }
-    ]}>Średni</Text>
-  </TouchableOpacity>
-  
-  <TouchableOpacity
-    style={[
-      styles.priorityButton,
-      priority === 'low' && styles.priorityButtonActive,
-      priority === 'low' && { backgroundColor: '#72BF78', borderColor: '#72BF78' },
-      priority !== 'low' && { borderColor: '#72BF78' }
-    ]}
-    onPress={() => setPriority('low')}
-  >
-    <Text style={[
-      styles.priorityText,
-      priority === 'low' && { color: 'white' },
-      priority !== 'low' && { color: '#72BF78' }
-    ]}>Niski</Text>
-  </TouchableOpacity>
+{/* Кнопки вибору пріоритету */}
+<TouchableOpacity
+style={[
+styles.priorityButton,
+priority === 'high' && styles.priorityButtonActive,
+priority === 'high' && { backgroundColor: '#FF486A', borderColor: '#FF486A' },
+priority !== 'high' && { borderColor: '#FF486A' }
+]}
+onPress={() => setPriority('high')}
+>
+<Text style={[
+styles.priorityText,
+priority === 'high' && { color: 'white' },
+priority !== 'high' && { color: '#FF486A' }
+]}>Wysoki</Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+style={[
+styles.priorityButton,
+priority === 'medium' && styles.priorityButtonActive,
+priority === 'medium' && { backgroundColor: '#FBA518', borderColor: '#FBA518' },
+priority !== 'medium' && { borderColor: '#FBA518' }
+]}
+onPress={() => setPriority('medium')}
+>
+<Text style={[
+styles.priorityText,
+priority === 'medium' && { color: 'white' },
+priority !== 'medium' && { color: '#FBA518' }
+]}>Średni</Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+style={[
+styles.priorityButton,
+priority === 'low' && styles.priorityButtonActive,
+priority === 'low' && { backgroundColor: '#72BF78', borderColor: '#72BF78' },
+priority !== 'low' && { borderColor: '#72BF78' }
+]}
+onPress={() => setPriority('low')}
+>
+<Text style={[
+styles.priorityText,
+priority === 'low' && { color: 'white' },
+priority !== 'low' && { color: '#72BF78' }
+]}>Niski</Text>
+</TouchableOpacity>
 </View>
 
 <Text style={styles.labelText}>Termin wykonania</Text>
 <View style={styles.dateTimeContainer}>
-  <View style={styles.datePickerButton}>
-    <Button
-      mode="outlined"
-      onPress={showDatepicker}
-      icon="calendar"
-      style={styles.dateButton}
-    >
-      {dueDate ? formatDate(dueDate) : 'Wybierz datę'}
-    </Button>
-    {dueDate && (
-      <IconButton
-        icon="close"
-        size={20}
-        onPress={clearDate}
-        style={styles.clearButton}
-      />
-    )}
-  </View>
-  <View style={styles.timePickerButton}>
-    <Button
-      mode="outlined"
-      onPress={showTimepicker}
-      icon="clock-outline"
-      style={styles.timeButton}
-      disabled={!dueDate}
-    >
-      {dueTime ? formatTime(dueTime) : 'Wybierz czas'}
-    </Button>
-    {dueTime && (
-      <IconButton
-        icon="close"
-        size={20}
-        onPress={clearTime}
-        style={styles.clearButton}
-      />
-    )}
-  </View>
+{/* Кнопка вибору дати */}
+<View style={styles.datePickerButton}>
+<Button
+mode="outlined"
+onPress={showDatepicker}
+icon="calendar"
+style={styles.dateButton}
+>
+{dueDate ? formatDate(dueDate) : 'Wybierz datę'}
+</Button>
+{dueDate && (
+<IconButton
+icon="close"
+size={20}
+onPress={clearDate}
+style={styles.clearButton}
+/>
+)}
+</View>
+{/* Кнопка вибору часу */}
+<View style={styles.timePickerButton}>
+<Button
+mode="outlined"
+onPress={showTimepicker}
+icon="clock-outline"
+style={styles.timeButton}
+disabled={!dueDate} // Деактивація, якщо дата не вибрана
+>
+{dueTime ? formatTime(dueTime) : 'Wybierz czas'}
+</Button>
+{dueTime && (
+<IconButton
+icon="close"
+size={20}
+onPress={clearTime}
+style={styles.clearButton}
+/>
+)}
+</View>
 </View>
 
 {dueTime && (
-  <View style={styles.reminderContainer}>
-    <Text style={styles.reminderText}>Przypomnienie</Text>
-    <Switch
-      value={enableReminder}
-      onValueChange={setEnableReminder}
-      color={theme.colors.primary}
-    />
-  </View>
+<View style={styles.reminderContainer}>
+{/* Перемикач для нагадування (видимий лише якщо вибрано час) */}
+<Text style={styles.reminderText}>Przypomnienie</Text>
+<Switch
+value={enableReminder}
+onValueChange={setEnableReminder}
+color={theme.colors.primary}
+/>
+</View>
 )}
 
 {showDatePicker && (
-  <DateTimePicker
-    value={dueDate || new Date()}
-    mode="date"
-    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-    onChange={onChangeDate}
-    minimumDate={new Date()}
-  />
+// Компонент для вибору дати
+<DateTimePicker
+value={dueDate || new Date()}
+mode="date"
+display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+onChange={onChangeDate}
+minimumDate={new Date()} // Мінімальна дата - сьогодні
+/>
 )}
 
 {showTimePicker && (
-  <DateTimePicker
-    value={dueTime || dueDate || new Date()}
-    mode="time"
-    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-    onChange={onChangeTime}
-  />
+// Компонент для вибору часу
+<DateTimePicker
+value={dueTime || dueDate || new Date()}
+mode="time"
+display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+onChange={onChangeTime}
+/>
 )}
 </ScrollView>
 </View>
 
 <View style={styles.buttonsContainer}>
-<Button 
-  mode="outlined" 
-  onPress={onClose}
-  style={styles.cancelButton}
-  labelStyle={styles.cancelButtonLabel}
+{/* Кнопка "Скасувати" */}
+<Button
+mode="outlined"
+onPress={onClose}
+style={styles.cancelButton}
+labelStyle={styles.cancelButtonLabel}
 >
-  Anuluj
+Anuluj
 </Button>
-<Button 
-  mode="contained" 
-  onPress={handleSave}
-  style={styles.saveButton}
-  labelStyle={styles.saveButtonLabel}
+{/* Кнопка "Зберегти" */}
+<Button
+mode="contained"
+onPress={handleSave}
+style={styles.saveButton}
+labelStyle={styles.saveButtonLabel}
 >
-  Zapisz
+Zapisz
 </Button>
 </View>
 </Surface>
 </View>
 </TouchableWithoutFeedback>
 
+{/* Компонент Snackbar для відображення повідомлень про помилки */}
 <Snackbar
 visible={snackbarVisible}
 onDismiss={() => setSnackbarVisible(false)}
@@ -367,6 +405,7 @@ style={styles.snackbar}
 );
 };
 
+// Стилі компонента
 const styles = StyleSheet.create({
 modalOverlay: {
 flex: 1,
