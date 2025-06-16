@@ -44,7 +44,7 @@ export const PomodoroProvider = ({ children }) => {
   const { user } = useAuth();
   const timerRef = useRef(null);
 
-  // Load settings and sessions completed from AsyncStorage
+
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
@@ -67,7 +67,6 @@ export const PomodoroProvider = ({ children }) => {
     loadData();
   }, [user?.email]);
 
-  // Save sessions completed to AsyncStorage whenever it changes
   useEffect(() => {
     const saveSessions = async () => {
       if (!user) return;
@@ -82,7 +81,7 @@ export const PomodoroProvider = ({ children }) => {
     saveSessions();
   }, [sessionsCompleted, user?.email]);
 
-  // Save settings to AsyncStorage whenever they change
+
   useEffect(() => {
     const saveSettings = async () => {
     if (!user) return;
@@ -97,13 +96,11 @@ export const PomodoroProvider = ({ children }) => {
     saveSettings();
   }, [settings, user?.email]);
 
-  // Timer effect
   useEffect(() => {
     if (isRunning) {
       timerRef.current = setInterval(() => {
         setTimeLeft((prevTime) => {
           if (prevTime <= 1) {
-            // Timer completed
             clearInterval(timerRef.current);
             handleSessionComplete();
             return 0;
@@ -129,12 +126,10 @@ export const PomodoroProvider = ({ children }) => {
       const newSessionsCompleted = sessionsCompleted + 1;
       setSessionsCompleted(newSessionsCompleted);
       
-      // Show notification
       if (settings.notifications) {
         await scheduleNotification('Sesja pracy zakończona!', 'Czas na przerwę.');
       }
       
-      // Determine next break type
       if (newSessionsCompleted % settings.sessionsBeforeLongBreak === 0) {
         setCurrentSession(SESSION_TYPES.LONG_BREAK);
         setTimeLeft(settings.longBreakDuration * 60);
@@ -145,7 +140,6 @@ export const PomodoroProvider = ({ children }) => {
         if (settings.autoStartBreaks) setIsRunning(true);
       }
     } else {
-      // Break completed
       if (settings.notifications) {
         await scheduleNotification('Przerwa zakończona!', 'Czas wrócić do pracy.');
       }
@@ -164,7 +158,7 @@ export const PomodoroProvider = ({ children }) => {
           body,
           sound: true,
         },
-        trigger: null, // Send immediately
+        trigger: null,
       });
     } catch (error) {
       console.error('Error scheduling notification:', error);
@@ -174,7 +168,6 @@ export const PomodoroProvider = ({ children }) => {
   const updateSettings = async (newSettings) => {
     try {
       setSettings(newSettings);
-      // Update current timer if needed
       if (!isRunning) {
         if (currentSession === SESSION_TYPES.WORK) {
           setTimeLeft(newSettings.workDuration * 60);
@@ -222,7 +215,6 @@ export const PomodoroProvider = ({ children }) => {
   const skipSession = (targetSession) => {
     setIsRunning(false);
     
-    // Set the timer based on the target session type
     switch (targetSession) {
       case SESSION_TYPES.WORK:
         setCurrentSession(SESSION_TYPES.WORK);
@@ -237,7 +229,6 @@ export const PomodoroProvider = ({ children }) => {
         setTimeLeft(settings.longBreakDuration * 60);
         break;
       default:
-        // If no target session specified, use the default cycling behavior
         if (currentSession === SESSION_TYPES.WORK) {
           if (sessionsCompleted % settings.sessionsBeforeLongBreak === 0) {
             setCurrentSession(SESSION_TYPES.LONG_BREAK);
