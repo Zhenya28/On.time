@@ -19,16 +19,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for auth state changes and restore user session
+  
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // User is signed in
+        
         setUser({
           uid: user.uid,
           email: user.email,
           displayName: user.displayName
         });
-        // Save user data to AsyncStorage
         try {
           await AsyncStorage.setItem('user', JSON.stringify({
             uid: user.uid,
@@ -39,7 +38,6 @@ export const AuthProvider = ({ children }) => {
           console.error('Error saving user data:', error);
         }
         } else {
-        // User is signed out
         setUser(null);
         try {
           await AsyncStorage.removeItem('user');
@@ -49,8 +47,6 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     });
-
-    // Check for stored user data on app launch
     const bootstrapAsync = async () => {
       try {
         const storedUser = await AsyncStorage.getItem('user');
@@ -64,7 +60,6 @@ export const AuthProvider = ({ children }) => {
 
     bootstrapAsync();
 
-    // Cleanup subscription
     return () => unsubscribe();
   }, []);
 
@@ -75,13 +70,11 @@ export const AuthProvider = ({ children }) => {
         displayName: newName
       });
 
-      // Update local user state
       setUser(prev => ({
         ...prev,
         displayName: newName
       }));
 
-      // Update AsyncStorage
       const updatedUser = {
         uid: user.uid,
         email: user.email,
@@ -100,12 +93,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Update the user's profile with their name
       await updateProfile(userCredential.user, {
         displayName: name
       });
       
-      // Update local user state with the name
       setUser({
         uid: userCredential.user.uid,
         email: userCredential.user.email,
