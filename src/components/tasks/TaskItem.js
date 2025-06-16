@@ -4,7 +4,6 @@ import { Text, Icon, IconButton } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import theme from '../../styles/theme';
 
-// Komponent dla wyświetlania jednego zadania
 const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
   const renderRightActions = (progress, dragX) => {
     const scale = dragX.interpolate({
@@ -30,7 +29,7 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
     );
   };
 
-  // Get priority color for checkbox
+
   const getPriorityColor = () => {
     if (task.completed) return theme.colors.disabled;
     
@@ -46,7 +45,7 @@ const TaskItem = ({ task, onToggleComplete, onEdit, onDelete }) => {
     }
   };
 
-  // Format date and time
+
   const formatDateTime = () => {
     if (!task.dueDate) return null;
     
