@@ -18,7 +18,7 @@ const SettingsScreen = ({ navigation }) => {
       const result = await logout();
       if (result.success) {
         await clearAllTasks();
-        // The navigation will be handled by the auth state change in App.js
+    
       } else {
         setSnackbarMessage('Wystąpił błąd podczas wylogowywania');
         setSnackbarVisible(true);
