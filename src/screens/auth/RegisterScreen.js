@@ -3,11 +3,11 @@ import { View, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Scr
 import { TextInput, Button, Text, Snackbar } from 'react-native-paper';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { useAuth } from '../../context/AuthContext';
-import Logo from '../../components/Logo';
-import theme from '../../styles/theme';
+import { useAuth } from '../../context/AuthContext'; // Імпорт хука для доступу до функцій авторизації.
+import Logo from '../../components/Logo'; // Імпорт компонента логотипу.
+import theme from '../../styles/theme'; // Імпорт теми для стилізації.
 
-// Схема валідації
+// Схема валідації полів форми реєстрації за допомогою Yup.
 const RegisterSchema = Yup.object().shape({
   name: Yup.string().required('To pole jest wymagane'),
   email: Yup.string()
@@ -17,34 +17,38 @@ const RegisterSchema = Yup.object().shape({
     .min(6, 'Hasło musi mieć co najmniej 6 znaków')
     .required('To pole jest wymagane'),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Hasła nie są zgodne')
+    .oneOf([Yup.ref('password'), null], 'Hasła nie są zgodne') // Перевірка, що паролі співпадають.
     .required('To pole jest wymagane')
 });
 
 const RegisterScreen = ({ navigation }) => {
-  const { register } = useAuth();
-  const [visible, setVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
-  const [secureConfirmTextEntry, setSecureConfirmTextEntry] = useState(true);
+  const { register } = useAuth(); // Отримуємо функцію `register` з контексту авторизації.
+  const [visible, setVisible] = useState(false); // Стан для керування видимістю `Snackbar`.
+  const [errorMessage, setErrorMessage] = useState(''); // Стан для повідомлення про помилку в `Snackbar`.
+  const [secureTextEntry, setSecureTextEntry] = useState(true); // Стан для відображення/приховування пароля.
+  const [secureConfirmTextEntry, setSecureConfirmTextEntry] = useState(true); // Стан для відображення/приховування підтвердження пароля.
 
+  // Функція для приховування `Snackbar`.
   const onDismissSnackBar = () => setVisible(false);
-  
+
+  // Функція для перемикання видимості текстового поля пароля.
   const toggleSecureEntry = () => {
     setSecureTextEntry(!secureTextEntry);
   };
 
+  // Функція для перемикання видимості текстового поля підтвердження пароля.
   const toggleSecureConfirmEntry = () => {
     setSecureConfirmTextEntry(!secureConfirmTextEntry);
   };
 
-  // Обробка реєстрації користувача
+  // Обробник реєстрації користувача.
   const handleRegister = async (values) => {
     try {
+      // Викликаємо функцію реєстрації з `AuthContext`.
       const result = await register(values.name, values.email, values.password);
       if (!result.success) {
-        setErrorMessage(result.error || 'Rejestracja nie powiodła się');
-        setVisible(true);
+        setErrorMessage(result.error || 'Rejestracja nie powiodła się'); // Встановлюємо повідомлення про помилку.
+        setVisible(true); // Показуємо `Snackbar`.
       }
     } catch (error) {
       setErrorMessage('Wystąpił błąd. Spróbuj ponownie.');
@@ -53,10 +57,12 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
+    // `KeyboardAvoidingView` допомагає уникнути перекриття полів введення клавіатурою.
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
+      {/* `ScrollView` дозволяє прокручувати вміст екрану, якщо він не поміщається. */}
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoContainer}>
           <Logo size={120} color={theme.colors.primary} />
@@ -64,20 +70,22 @@ const RegisterScreen = ({ navigation }) => {
 
         <View style={styles.formContainer}>
           <Text style={styles.title}>Rejestracja</Text>
-          
+
+          {/* `Formik` використовується для управління станом форми, її валідацією та відправкою. */}
           <Formik
-            initialValues={{ name: '', email: '', password: '', confirmPassword: '' }}
-            validationSchema={RegisterSchema}
-            onSubmit={handleRegister}
+            initialValues={{ name: '', email: '', password: '', confirmPassword: '' }} // Початкові значення полів форми.
+            validationSchema={RegisterSchema}                                        // Схема валідації.
+            onSubmit={handleRegister}                                                // Обробник відправки форми.
           >
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
               <>
+                {/* Поле введення для імені. */}
                 <TextInput
                   label="Imię"
                   value={values.name}
                   onChangeText={handleChange('name')}
                   onBlur={handleBlur('name')}
-                  error={touched.name && errors.name}
+                  error={touched.name && errors.name} // Відображаємо помилку, якщо поле було торкнуто і є помилка.
                   style={styles.input}
                   left={<TextInput.Icon icon="account" />}
                 />
@@ -85,6 +93,7 @@ const RegisterScreen = ({ navigation }) => {
                   <Text style={styles.errorText}>{errors.name}</Text>
                 )}
 
+                {/* Поле введення для Email. */}
                 <TextInput
                   label="E-mail"
                   value={values.email}
@@ -100,16 +109,18 @@ const RegisterScreen = ({ navigation }) => {
                   <Text style={styles.errorText}>{errors.email}</Text>
                 )}
 
+                {/* Поле введення для пароля. */}
                 <TextInput
                   label="Hasło"
                   value={values.password}
                   onChangeText={handleChange('password')}
                   onBlur={handleBlur('password')}
-                  secureTextEntry={secureTextEntry}
+                  secureTextEntry={secureTextEntry} // Визначає, чи текст прихований.
                   error={touched.password && errors.password}
                   style={styles.input}
                   left={<TextInput.Icon icon="lock" />}
                   right={
+                    /* Іконка для перемикання видимості пароля. */
                     <TextInput.Icon
                       icon={secureTextEntry ? "eye" : "eye-off"}
                       onPress={toggleSecureEntry}
@@ -120,16 +131,18 @@ const RegisterScreen = ({ navigation }) => {
                   <Text style={styles.errorText}>{errors.password}</Text>
                 )}
 
+                {/* Поле введення для підтвердження пароля. */}
                 <TextInput
                   label="Potwierdź hasło"
                   value={values.confirmPassword}
                   onChangeText={handleChange('confirmPassword')}
                   onBlur={handleBlur('confirmPassword')}
-                  secureTextEntry={secureConfirmTextEntry}
+                  secureTextEntry={secureConfirmTextEntry} // Визначає, чи текст прихований.
                   error={touched.confirmPassword && errors.confirmPassword}
                   style={styles.input}
                   left={<TextInput.Icon icon="lock-check" />}
                   right={
+                    /* Іконка для перемикання видимості підтвердження пароля. */
                     <TextInput.Icon
                       icon={secureConfirmTextEntry ? "eye" : "eye-off"}
                       onPress={toggleSecureConfirmEntry}
@@ -140,9 +153,10 @@ const RegisterScreen = ({ navigation }) => {
                   <Text style={styles.errorText}>{errors.confirmPassword}</Text>
                 )}
 
+                {/* Кнопка для відправки форми реєстрації. */}
                 <Button
                   mode="contained"
-                  onPress={handleSubmit}
+                  onPress={handleSubmit} // Викликає функцію відправки форми.
                   style={styles.button}
                   labelStyle={styles.buttonLabel}
                 >
@@ -152,6 +166,7 @@ const RegisterScreen = ({ navigation }) => {
             )}
           </Formik>
 
+          {/* Контейнер для посилання на екран входу, якщо користувач вже має акаунт. */}
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Masz już konto?</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -161,6 +176,7 @@ const RegisterScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
+      {/* `Snackbar` для відображення повідомлень про помилки. */}
       <Snackbar
         visible={visible}
         onDismiss={onDismissSnackBar}
