@@ -7,7 +7,6 @@ import TaskItem from '../../components/tasks/TaskItem';
 import TaskFormModal from '../../components/tasks/TaskFormModal';
 import theme from '../../styles/theme';
 
-// Ekran kalendaля
 const CalendarScreen = () => {
   const { tasks, loading, getTasksByDate, addTask, updateTask, deleteTask, toggleTaskCompletion } = useTask();
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
